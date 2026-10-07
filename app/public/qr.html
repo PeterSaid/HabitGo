@@ -1,0 +1,27 @@
+<!doctype html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>HabitGo — امسح الكود</title>
+<style>
+  body { font-family: 'Segoe UI', Tahoma, sans-serif; background: #F8FAF9; display: flex; flex-direction: column;
+         align-items: center; justify-content: center; min-height: 100vh; margin: 0; color: #17201B; }
+  .card { background: #fff; border: 1px solid #E1E8E3; border-radius: 24px; padding: 40px 48px; text-align: center;
+          box-shadow: 0 12px 32px rgba(23,32,27,.12); }
+  h1 { font-size: 26px; margin: 0 0 8px; }
+  p { color: #66736B; margin: 0 0 24px; }
+  .url { direction: ltr; font-family: monospace; background: #F0FDF4; color: #16A34A; padding: 10px 18px;
+         border-radius: 12px; font-weight: 700; margin-top: 20px; display: inline-block; }
+  img.qr { width: 280px; height: 280px; }
+</style>
+</head>
+<body>
+  <div class="card">
+    <h1>🌱 امسح الكود بكاميرا الموبايل</h1>
+    <p>افتح كاميرا الموبايل ووجّهها للكود — هيفتح HabitGo مباشرة</p>
+    <img class="qr" src="https://api.qrserver.com/v1/create-qr-code/?size=280x280&data=http://192.168.1.85:5173" alt="QR" />
+    <span class="url">http://192.168.1.85:5173</span>
+  </div>
+</body>
+</html>
