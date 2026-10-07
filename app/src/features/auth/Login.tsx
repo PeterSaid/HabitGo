@@ -1,12 +1,11 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Capacitor } from '@capacitor/core';
-import { api, ApiError, getServerUrl, setServerUrl } from '../../api/client';
+import { api, ApiError } from '../../api/client';
 import { useI18n } from '../../i18n';
 import type { TranslationKey } from '../../i18n/en';
 import { useStore } from '../../state/store';
 import { Button, Field, Input } from '../../ui/components';
-import { Logo } from '../onboarding/Splash';
+import logoUrl from '../../assets/logo.png';
 
 export default function Login() {
   const { t, locale } = useI18n();
@@ -16,8 +15,6 @@ export default function Login() {
   const [password, setPassword] = useState('');
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [server, setServer] = useState(getServerUrl());
-  const [showServer, setShowServer] = useState(false);
 
   const submit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -27,7 +24,6 @@ export default function Login() {
       return;
     }
     setBusy(true);
-    setServerUrl(server);
     try {
       const res = await api.post<{ token: string; user: never }>('/auth/login', { email: email.trim().toLowerCase(), password });
       applySession(res.token, res.user);
@@ -45,13 +41,13 @@ export default function Login() {
   return (
     <div className="page page-no-nav" style={{ minHeight: '100dvh', display: 'flex', flexDirection: 'column' }}>
       <div className="center" style={{ padding: 'var(--sp-7) 0 var(--sp-5)', flexDirection: 'column', gap: 'var(--sp-3)' }}>
-        <Logo size={72} />
+        <img src={logoUrl} alt="HabitGo" width={76} height={76} style={{ borderRadius: 20, boxShadow: 'var(--shadow-md)' }} />
         <h1 className="t-page-title">{t('login_title')}</h1>
         <p className="text-muted t-body">{t('login_subtitle')}</p>
       </div>
 
       <form onSubmit={submit} className="col grow" noValidate>
-        <Field label={t('email')} error={error && !email ? undefined : undefined}>
+        <Field label={t('email')}>
           <Input
             type="email"
             inputMode="email"
@@ -73,19 +69,6 @@ export default function Login() {
         <button type="button" className="btn-text" style={{ alignSelf: 'flex-end', color: 'var(--primary)' }} onClick={() => navigate('/forgot')}>
           {t('forgot_password')}
         </button>
-
-        {Capacitor.isNativePlatform() && (
-          <div className="mt-3">
-            <button type="button" className="btn-text" style={{ color: 'var(--text-3)', fontSize: 12 }} onClick={() => setShowServer(!showServer)}>
-              {showServer ? '▾' : '▸'} API server
-            </button>
-            {showServer && (
-              <Field label="API server URL">
-                <Input dir="ltr" value={server} onChange={(e) => setServer(e.target.value)} placeholder="http://192.168.1.10:4000/api/v1" />
-              </Field>
-            )}
-          </div>
-        )}
 
         <div className="grow" />
         <Button type="submit" block size="lg" loading={busy}>

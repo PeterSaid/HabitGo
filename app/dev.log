@@ -32,3 +32,12 @@ AggregateError [ECONNREFUSED]:
 [2m10:48:55 AM[22m [36m[1m[vite][22m[39m [32mhmr update [39m[2m/src/App.tsx, /src/features/auth/Login.tsx, /src/features/profile/LanguageSettings.tsx, /src/features/onboarding/Personalization.tsx, /src/features/profile/NotificationsCenter.tsx, /src/features/profile/NotificationSettings.tsx, /src/features/profile/Settings.tsx, /src/features/profile/EditProfile.tsx, /src/layouts/AppLayout.tsx, /src/features/profile/Profile.tsx, /src/features/home/Home.tsx, /src/features/auth/Register.tsx, /src/features/profile/Appearance.tsx, /src/features/rewards/RewardDetails.tsx, /src/features/habits/HabitCard.tsx[22m
 [2m10:49:20 AM[22m [36m[1m[vite][22m[39m [32mhmr update [39m[2m/src/features/onboarding/Personalization.tsx[22m
 [2m10:49:45 AM[22m [36m[1m[vite][22m[39m [32mhmr update [39m[2m/src/features/onboarding/Personalization.tsx[22m
+[2m10:51:19 AM[22m [36m[1m[vite][22m[39m [32mpage reload [39m[2mandroid/app/src/main/assets/public/index.html[22m
+[2m10:51:19 AM[22m [36m[1m[vite][22m[39m [32mpage reload [39m[2mandroid/app/src/main/assets/public/qr.html[22m
+[2m10:51:38 AM[22m [36m[1m[vite][22m[39m [32mpage reload [39m[2mandroid/app/build/intermediates/assets/debug/public/index.html[22m
+[2m10:51:41 AM[22m [36m[1m[vite][22m[39m [32mpage reload [39m[2mandroid/app/build/intermediates/assets/release/public/index.html[22m
+[2m11:06:29 AM[22m [36m[1m[vite][22m[39m [32mhmr update [39m[2m/src/features/onboarding/Splash.tsx[22m
+[2m11:07:13 AM[22m [36m[1m[vite][22m[39m [32mhmr update [39m[2m/src/features/auth/Login.tsx[22m
+[2m11:07:34 AM[22m [36m[1m[vite][22m[39m [32mpage reload [39m[2mindex.html[22m
+[2m11:08:26 AM[22m [36m[1m[vite][22m[39m [32mhmr update [39m[2m/src/features/onboarding/Onboarding.tsx[22m
+[2m11:08:46 AM[22m [36m[1m[vite][22m[39m [32mhmr update [39m[2m/src/features/onboarding/Onboarding.tsx[22m

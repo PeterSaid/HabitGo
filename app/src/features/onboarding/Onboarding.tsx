@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { BarChart3, Gift, Target, TrendingUp } from 'lucide-react';
 import { useI18n } from '../../i18n';
 import { Button } from '../../ui/components';
-import { Logo } from './Splash';
+import logoUrl from '../../assets/logo.png';
 
 const SLIDES = [
   { key: 1, Icon: Target, color: '#22C55E' },
@@ -31,6 +31,10 @@ export default function Onboarding() {
           {t('onboarding_skip')}
         </button>
       </div>
+
+      {step === 0 && (
+        <img src={logoUrl} alt="HabitGo" width={72} height={72} style={{ borderRadius: 18, alignSelf: 'center', marginTop: 'var(--sp-2)', boxShadow: 'var(--shadow-md)' }} />
+      )}
 
       <div className="grow center" style={{ flexDirection: 'column', gap: 'var(--sp-5)', padding: 'var(--sp-4)' }}>
         <div
