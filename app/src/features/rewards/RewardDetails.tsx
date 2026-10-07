@@ -135,7 +135,7 @@ export default function RewardDetails() {
             </Card>
           )}
 
-          <div style={{ position: 'fixed', bottom: 0, insetInline: 0, maxWidth: 'var(--max-width)', margin: '0 auto', padding: 'var(--sp-4)', background: 'color-mix(in srgb, var(--bg) 92%, transparent)', backdropFilter: 'blur(12px)' }}>
+          <div style={{ position: 'fixed', bottom: 'calc(var(--nav-height) + env(safe-area-inset-bottom))', insetInline: 0, maxWidth: 'var(--max-width)', margin: '0 auto', padding: 'var(--sp-4)', background: 'color-mix(in srgb, var(--bg) 92%, transparent)', backdropFilter: 'blur(12px)', zIndex: 35 }}>
             <Button
               block
               size="lg"

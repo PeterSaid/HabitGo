@@ -155,7 +155,7 @@ export default function HabitForm() {
   );
 
   return (
-    <div className="page page-no-nav" style={{ paddingBottom: 'var(--sp-7)' }}>
+    <div className="page page-no-nav" style={{ paddingBottom: 'calc(var(--nav-height) + var(--sp-6))' }}>
       <AppBar title={editing ? t('edit_habit') : t('add_habit')} onBack={() => navigate(-1)} />
       <form onSubmit={submit} className="mt-4" noValidate>
         <Field label={t('habit_name')}>

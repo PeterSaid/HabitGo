@@ -13,6 +13,12 @@ const PERFECT_BONUSES = { perfect_week: 100, perfect_month: 500 };
 
 const MAX_BACKFILL_DAYS = 7; // cannot complete habits more than a week in the past
 
+/** The user's calendar drives dates, not the server's — read it from the profile. */
+function getUserTimezone(userId) {
+  const p = db.prepare('SELECT timezone FROM profiles WHERE user_id = ?').get(userId);
+  return (p && p.timezone) || 'UTC';
+}
+
 function loadHabitForUser(userId, habitId) {
   const habit = db
     .prepare(
@@ -40,7 +46,7 @@ function completeHabit({ user, habitId, date, value }) {
   const habit = loadHabitForUser(user.id, habitId);
   if (habit.is_paused) throw forbidden('This habit is paused', 'habit_paused');
   if (!isValidDateStr(date)) throw badRequest('Invalid date');
-  const tz = habit.timezone || 'UTC';
+  const tz = getUserTimezone(user.id);
   const today = todayIn(tz);
   if (date > today) throw badRequest('Cannot complete a habit for a future date');
   if (diffDays(today, date) > MAX_BACKFILL_DAYS) {

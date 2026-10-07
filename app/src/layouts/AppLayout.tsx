@@ -23,6 +23,9 @@ export default function AppLayout() {
     return location.pathname.startsWith(path);
   };
 
+  // Screens with their own fixed primary CTA — hide the FAB so they never overlap
+  const hideFab = /^\/rewards\/[^/]+$/.test(location.pathname);
+
   return (
     <>
       {!online && (
@@ -43,6 +46,7 @@ export default function AppLayout() {
         {TABS.map((tab) => {
           const Icon = tab.icon;
           if (tab.path === '/add') {
+            if (hideFab) return <span key="add-slot" aria-hidden />;
             return (
               <button key="add" className="fab" aria-label={t('nav_add')} onClick={() => navigate('/habits/new')}>
                 <Plus size={26} strokeWidth={2.6} />
