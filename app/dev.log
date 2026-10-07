@@ -13,3 +13,7 @@ AggregateError [ECONNREFUSED]:
     at internalConnectMultiple (node:net:1339:18)
     at afterConnectMultiple (node:net:1942:7)
 [2m10:19:35 AM[22m [36m[1m[vite][22m[39m [32mhmr update [39m[2m/src/features/auth/Register.tsx[22m
+[2m10:29:02 AM[22m [36m[1m[vite][22m[39m [32mhmr update [39m[2m/src/features/auth/ForgotPassword.tsx[22m
+[2m10:29:42 AM[22m [36m[1m[vite][22m[39m [32mhmr update [39m[2m/src/i18n/index.tsx[22m
+[2m10:30:15 AM[22m [36m[1m[vite][22m[39m [32mhmr update [39m[2m/src/i18n/index.tsx[22m
+[2m10:30:57 AM[22m [36m[1m[vite][22m[39m [32mhmr update [39m[2m/src/features/auth/ForgotPassword.tsx[22m

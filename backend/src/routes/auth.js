@@ -34,8 +34,13 @@ const loginSchema = z.object({
   password: z.string().min(1),
 });
 
-// In-memory password reset tokens (MVP; documented limitation)
-const resetTokens = new Map();
+// In-memory OTP store (MVP): email -> { hash, expires, attempts, userId }
+const crypto = require('crypto');
+const otpStore = new Map();
+const OTP_TTL_MS = 10 * 60 * 1000; // 10 minutes
+const OTP_MAX_ATTEMPTS = 5;
+
+const sha256 = (s) => crypto.createHash('sha256').update(String(s)).digest('hex');
 
 function publicUser(u) {
   const profile = db.prepare('SELECT * FROM profiles WHERE user_id = ?').get(u.id);
@@ -120,40 +125,71 @@ router.post(
   asyncHandler(async (req, res) => {
     const { email } = validate(z.object({ email: z.string().email().toLowerCase() }), req.body);
     const user = findUserByEmail(email);
-    // Always answer 200 to avoid account enumeration
-    if (!user) return res.json({ ok: true });
-    const token = uuid() + uuid().slice(0, 8);
-    resetTokens.set(token, { userId: user.id, expires: Date.now() + 30 * 60 * 1000 });
+
+    const mail = require('../services/email');
+    // Never reveal whether the account exists
+    if (!user) return res.json({ ok: true, delivered: mail.isMailConfigured() });
+
+    const otp = String(Math.floor(100000 + Math.random() * 900000));
+    otpStore.set(email, {
+      hash: sha256(otp),
+      expires: Date.now() + OTP_TTL_MS,
+      attempts: 0,
+      userId: user.id,
+    });
+
+    let delivered = false;
+    try {
+      const result = await mail.sendOtpEmail(email, otp);
+      delivered = result.sent;
+    } catch (e) {
+      console.error('[mail]', e.message);
+    }
+
     require('../services/notifications').notify(
       user.id,
       'system',
       'Password reset requested',
       'طلب إعادة تعيين كلمة المرور',
-      'Use the reset code shown in the app (MVP: no email delivery configured).',
-      'استخدم رمز إعادة التعيين الظاهر في التطبيق (نسخة الاختبار: لا يوجد بريد إلكتروني).',
+      delivered ? 'We emailed you a 6-digit code.' : `Demo mode (no SMTP configured). Your code: ${otp}`,
+      delivered ? 'أرسلنا لك كودًا من 6 أرقام على بريدك.' : `وضع التجربة (بدون SMTP). الكود: ${otp}`,
       null
     );
-    const expose = config_allowsDevReset();
-    res.json({ ok: true, ...(expose ? { reset_token: token } : {}) });
+
+    // Demo mode only: expose the OTP so the flow is testable without SMTP
+    res.json({ ok: true, delivered, ...(delivered ? {} : { otp }) });
   })
 );
 
-function config_allowsDevReset() {
-  const { config } = require('../config');
-  return config.env !== 'production';
-}
-
 router.post(
   '/reset-password',
-  rateLimit({ key: 'reset', max: 10 }),
+  rateLimit({ key: 'reset', max: 15 }),
   asyncHandler(async (req, res) => {
-    const { token, new_password } = validate(
-      z.object({ token: z.string().min(10), new_password: passwordSchema }),
+    const { email, otp, new_password } = validate(
+      z.object({
+        email: z.string().email().toLowerCase(),
+        otp: z.string().regex(/^\d{6}$/, 'Enter the 6-digit code'),
+        new_password: passwordSchema,
+      }),
       req.body
     );
-    const entry = resetTokens.get(token);
-    if (!entry || entry.expires < Date.now()) throw badRequest('Reset link is invalid or expired', 'reset_invalid');
-    resetTokens.delete(token);
+
+    const entry = otpStore.get(email);
+    if (!entry) throw badRequest('Request a new code first', 'otp_invalid');
+    if (entry.expires < Date.now()) {
+      otpStore.delete(email);
+      throw badRequest('This code expired — request a new one', 'otp_expired');
+    }
+    if (entry.attempts >= OTP_MAX_ATTEMPTS) {
+      otpStore.delete(email);
+      throw badRequest('Too many wrong attempts — request a new code', 'otp_locked');
+    }
+    if (entry.hash !== sha256(otp)) {
+      entry.attempts += 1;
+      throw badRequest('Wrong code — check your email', 'otp_invalid');
+    }
+
+    otpStore.delete(email);
     const hash = bcrypt.hashSync(new_password, 10);
     db.prepare('UPDATE users SET password_hash = ?, updated_at = ? WHERE id = ?').run(hash, nowIso(), entry.userId);
     audit(req, 'auth.reset_password', 'user', entry.userId);
