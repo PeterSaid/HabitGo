@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { api } from '../../api/client';
 import { useI18n } from '../../i18n';
 import { useStore } from '../../state/store';
+import { useToast } from '../../ui/components';
 import { Button, Card, Segmented } from '../../ui/components';
 
 const INTERESTS = [
@@ -22,7 +23,8 @@ const INTERESTS = [
 export default function Personalization() {
   const { t, locale, setLocale } = useI18n();
   const navigate = useNavigate();
-  const { user, refreshUser } = useStore();
+  const toast = useToast();
+  const { user, refreshUser, patchUser } = useStore();
   const [selected, setSelected] = useState<string[]>(user?.interests ?? []);
   const [busy, setBusy] = useState(false);
 
@@ -34,6 +36,12 @@ export default function Personalization() {
     try {
       await api.post('/users/me/personalization', { interests: selected });
       await refreshUser();
+      navigate('/');
+    } catch {
+      // never leave the user stuck on a network hiccup: proceed into the app;
+      // interests are saved again at the next successful sync
+      toast(t('err_generic'), 'error');
+      patchUser({ onboarded: true, interests: selected });
       navigate('/');
     } finally {
       setBusy(false);

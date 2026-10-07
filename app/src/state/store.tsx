@@ -34,6 +34,7 @@ type StoreValue = {
   refreshUser: () => Promise<void>;
   refreshUnread: () => Promise<void>;
   applySession: (token: string, user: AppUser) => void;
+  patchUser: (partial: Partial<AppUser>) => void;
   clearSession: () => void;
   logout: () => void;
 };
@@ -108,6 +109,11 @@ export function AppStoreProvider({ children }: { children: React.ReactNode }) {
     setUser(u);
   }, []);
 
+  /** Optimistic local update (used when a request fails but the UX must proceed). */
+  const patchUser = useCallback((partial: Partial<AppUser>) => {
+    setUser((u) => (u ? { ...u, ...partial } : u));
+  }, []);
+
   const clearSession = useCallback(() => {
     setToken(null);
     setUser(null);
@@ -121,8 +127,8 @@ export function AppStoreProvider({ children }: { children: React.ReactNode }) {
   }, [clearSession]);
 
   const value = useMemo(
-    () => ({ user, level, unread, online, refreshUser, refreshUnread, applySession, clearSession, logout }),
-    [user, level, unread, online, refreshUser, refreshUnread, applySession, clearSession, logout]
+    () => ({ user, level, unread, online, refreshUser, refreshUnread, applySession, patchUser, clearSession, logout }),
+    [user, level, unread, online, refreshUser, refreshUnread, applySession, patchUser, clearSession, logout]
   );
 
   return <StoreContext.Provider value={value}>{children}</StoreContext.Provider>;

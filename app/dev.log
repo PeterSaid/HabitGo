@@ -17,3 +17,18 @@ AggregateError [ECONNREFUSED]:
 [2m10:29:42 AM[22m [36m[1m[vite][22m[39m [32mhmr update [39m[2m/src/i18n/index.tsx[22m
 [2m10:30:15 AM[22m [36m[1m[vite][22m[39m [32mhmr update [39m[2m/src/i18n/index.tsx[22m
 [2m10:30:57 AM[22m [36m[1m[vite][22m[39m [32mhmr update [39m[2m/src/features/auth/ForgotPassword.tsx[22m
+[2m10:32:28 AM[22m [36m[1m[vite][22m[39m [32mpage reload [39m[2mandroid/app/src/main/assets/public/index.html[22m
+[2m10:32:28 AM[22m [36m[1m[vite][22m[39m [32mpage reload [39m[2mandroid/app/src/main/assets/public/qr.html[22m
+[2m10:32:47 AM[22m [36m[1m[vite][22m[39m [32mpage reload [39m[2mandroid/app/build/intermediates/assets/debug/public/index.html[22m
+[2m10:32:47 AM[22m [36m[1m[vite][22m[39m [32mpage reload [39m[2mandroid/app/build/intermediates/assets/debug/public/qr.html[22m
+[2m10:32:51 AM[22m [36m[1m[vite][22m[39m [32mpage reload [39m[2mandroid/app/build/intermediates/assets/release/public/index.html[22m
+[2m10:32:51 AM[22m [36m[1m[vite][22m[39m [32mpage reload [39m[2mandroid/app/build/intermediates/assets/release/public/qr.html[22m
+[2m10:47:03 AM[22m [36m[1m[vite][22m[39m [32mhmr update [39m[2m/src/features/onboarding/Personalization.tsx[22m
+[2m10:47:22 AM[22m [36m[1m[vite][22m[39m [32mhmr update [39m[2m/src/features/onboarding/Personalization.tsx[22m
+[2m10:47:45 AM[22m [36m[1m[vite][22m[39m [32mhmr update [39m[2m/src/state/store.tsx[22m
+[2m10:48:25 AM[22m [36m[1m[vite][22m[39m [32mhmr update [39m[2m/src/state/store.tsx[22m
+[2m10:48:54 AM[22m [36m[1m[vite][22m[39m [32mhmr update [39m[2m/src/state/store.tsx[22m
+[2m10:48:55 AM[22m [36m[1m[vite][22m[39m [33mhmr invalidate [39m[2m/src/state/store.tsx[22m Could not Fast Refresh ("useStore" export is incompatible). Learn more at https://github.com/vitejs/vite-plugin-react/tree/main/packages/plugin-react#consistent-components-exports
+[2m10:48:55 AM[22m [36m[1m[vite][22m[39m [32mhmr update [39m[2m/src/App.tsx, /src/features/auth/Login.tsx, /src/features/profile/LanguageSettings.tsx, /src/features/onboarding/Personalization.tsx, /src/features/profile/NotificationsCenter.tsx, /src/features/profile/NotificationSettings.tsx, /src/features/profile/Settings.tsx, /src/features/profile/EditProfile.tsx, /src/layouts/AppLayout.tsx, /src/features/profile/Profile.tsx, /src/features/home/Home.tsx, /src/features/auth/Register.tsx, /src/features/profile/Appearance.tsx, /src/features/rewards/RewardDetails.tsx, /src/features/habits/HabitCard.tsx[22m
+[2m10:49:20 AM[22m [36m[1m[vite][22m[39m [32mhmr update [39m[2m/src/features/onboarding/Personalization.tsx[22m
+[2m10:49:45 AM[22m [36m[1m[vite][22m[39m [32mhmr update [39m[2m/src/features/onboarding/Personalization.tsx[22m

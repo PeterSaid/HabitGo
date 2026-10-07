@@ -25,7 +25,7 @@ function buildApp() {
 
   app.use('/api/v1/auth', rateLimit({ key: 'auth', max: 60 }), authRouter);
   app.use('/api/v1', metaRouter);
-  app.use('/api/v1', usersRouter);
+  app.use('/api/v1/users', usersRouter);
   app.use('/api/v1/habits', habitsRouter);
   app.use('/api/v1', dashboardRouter);
   app.use('/api/v1', rewardsRouter);
