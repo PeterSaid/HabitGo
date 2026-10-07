@@ -7,7 +7,8 @@ services:
     runtime: node
     plan: free
     rootDir: backend
-    buildCommand: npm ci && cd ../app && npm ci && npm run build
+    # --include=dev: NODE_ENV=production makes npm skip build tools (tsc/vite) — required for the web build
+    buildCommand: npm ci --include=dev && cd ../app && npm ci --include=dev && npm run build
     startCommand: npm start
     healthCheckPath: /api/health
     envVars:
