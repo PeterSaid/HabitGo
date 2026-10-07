@@ -4,6 +4,7 @@ import react from '@vitejs/plugin-react';
 export default defineConfig({
   plugins: [react()],
   server: {
+    host: true, // expose on LAN so the phone can open the live-reload app
     port: 5173,
     proxy: {
       '/api': {
