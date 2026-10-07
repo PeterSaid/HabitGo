@@ -1,14 +1,15 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { Check, Eye, EyeOff, X } from 'lucide-react';
 import { api, ApiError } from '../../api/client';
 import { useI18n } from '../../i18n';
 import type { TranslationKey } from '../../i18n/en';
 import { useStore } from '../../state/store';
-import { Button, Field, Input, Select } from '../../ui/components';
+import { Button, Field, Input } from '../../ui/components';
 
 const ERR_KEYS: Record<string, TranslationKey> = {
   email_taken: 'err_email_taken',
-  validation_error: 'val_password',
+  phone_taken: 'err_email_taken',
   network_error: 'err_network',
 };
 
@@ -20,14 +21,23 @@ export default function Register() {
   const [form, setForm] = useState({ name: '', email: '', password: '', confirm: '', country: '', city: '' });
   const [busy, setBusy] = useState(false);
   const [errors, setErrors] = useState<Record<string, string>>({});
+  const [showPass, setShowPass] = useState(false);
+  const [emailTaken, setEmailTaken] = useState(false);
 
   const set = (k: keyof typeof form) => (e: React.ChangeEvent<HTMLInputElement>) => setForm({ ...form, [k]: e.target.value });
+
+  const rules = {
+    length: form.password.length >= 8,
+    letter: /[A-Za-z]/.test(form.password),
+    digit: /[0-9]/.test(form.password),
+  };
+  const passwordValid = rules.length && rules.letter && rules.digit;
 
   const validate = (): boolean => {
     const errs: Record<string, string> = {};
     if (!form.name.trim()) errs.name = t('val_name');
     if (!/^\S+@\S+\.\S+$/.test(form.email)) errs.email = t('val_email');
-    if (form.password.length < 8 || !/[A-Za-z]/.test(form.password) || !/[0-9]/.test(form.password)) errs.password = t('val_password');
+    if (!passwordValid) errs.password = t('val_password');
     if (form.confirm !== form.password) errs.confirm = t('val_match');
     setErrors(errs);
     return Object.keys(errs).length === 0;
@@ -35,6 +45,7 @@ export default function Register() {
 
   const submit = async (e: React.FormEvent) => {
     e.preventDefault();
+    setEmailTaken(false);
     if (!validate()) return;
     setBusy(true);
     try {
@@ -48,11 +59,27 @@ export default function Register() {
       applySession(res.token, res.user);
       navigate('/personalization');
     } catch (err) {
-      setErrors({ email: t(ERR_KEYS[err instanceof ApiError ? err.code : ''] ?? 'err_generic') });
+      if (err instanceof ApiError && (err.code === 'email_taken' || err.code === 'phone_taken')) {
+        setEmailTaken(true);
+        setErrors({ email: t('err_email_taken') });
+      } else if (err instanceof ApiError && err.code === 'validation_error') {
+        // backend message looks like "password: ..." — route it to the right field
+        const [field, ...rest] = err.message.split(': ');
+        const key = ['name', 'email', 'password'].includes(field) ? field : 'email';
+        setErrors({ [key]: rest.join(': ') || t('err_generic') });
+      } else {
+        setErrors({ email: t(ERR_KEYS[err instanceof ApiError ? err.code : ''] ?? 'err_generic') });
+      }
     } finally {
       setBusy(false);
     }
   };
+
+  const Rule = ({ ok, label }: { ok: boolean; label: string }) => (
+    <span className="row" style={{ gap: 5, fontSize: 12, color: ok ? 'var(--success)' : 'var(--text-3)' }}>
+      {ok ? <Check size={13} /> : <X size={13} />} {label}
+    </span>
+  );
 
   return (
     <div className="page page-no-nav" style={{ minHeight: '100dvh', display: 'flex', flexDirection: 'column' }}>
@@ -63,19 +90,32 @@ export default function Register() {
 
       <form onSubmit={submit} className="col grow" noValidate>
         <Field label={t('name')} error={errors.name}>
-          <Input value={form.name} onChange={set('name')} autoComplete="name" error={!!errors.name} placeholder={t('val_name') === 'أدخل اسمك' ? 'Peter' : 'Your name'} />
+          <Input value={form.name} onChange={set('name')} autoComplete="name" error={!!errors.name} />
         </Field>
         <Field label={t('email')} error={errors.email}>
           <Input type="email" dir="ltr" inputMode="email" value={form.email} onChange={set('email')} autoComplete="email" error={!!errors.email} placeholder="name@example.com" />
         </Field>
-        <div className="grid-2">
-          <Field label={t('password')} error={errors.password}>
-            <Input type="password" value={form.password} onChange={set('password')} autoComplete="new-password" error={!!errors.password} />
-          </Field>
-          <Field label={t('confirm_password')} error={errors.confirm}>
-            <Input type="password" value={form.confirm} onChange={set('confirm')} autoComplete="new-password" error={!!errors.confirm} />
-          </Field>
-        </div>
+        <Field label={t('password')}>
+          <div style={{ position: 'relative' }}>
+            <Input type={showPass ? 'text' : 'password'} value={form.password} onChange={set('password')} autoComplete="new-password" error={!!errors.password} style={{ paddingInlineEnd: 48 }} />
+            <button
+              type="button"
+              aria-label={showPass ? 'hide password' : 'show password'}
+              onClick={() => setShowPass(!showPass)}
+              style={{ position: 'absolute', top: 14, insetInlineEnd: 14, color: 'var(--text-3)' }}
+            >
+              {showPass ? <EyeOff size={18} /> : <Eye size={18} />}
+            </button>
+          </div>
+          <div className="row" style={{ gap: 14, flexWrap: 'wrap', marginTop: 4 }}>
+            <Rule ok={rules.length} label="8+" />
+            <Rule ok={rules.letter} label={t('val_password').split('،')[0].includes('8') ? 'Aa' : 'Aa'} />
+            <Rule ok={rules.digit} label="123" />
+          </div>
+        </Field>
+        <Field label={t('confirm_password')} error={errors.confirm}>
+          <Input type={showPass ? 'text' : 'password'} value={form.confirm} onChange={set('confirm')} autoComplete="new-password" error={!!errors.confirm} />
+        </Field>
         <div className="grid-2">
           <Field label={`${t('country')} (${t('optional')})`}>
             <Input value={form.country} onChange={set('country')} autoComplete="country" />
@@ -86,7 +126,12 @@ export default function Register() {
         </div>
 
         <div className="grow" />
-        <Button type="submit" block size="lg" loading={busy}>
+        {emailTaken && (
+          <Button variant="secondary" block className="mb-3" onClick={() => navigate('/login')}>
+            {t('have_account')} — {t('login_now')}
+          </Button>
+        )}
+        <Button type="submit" block size="lg" loading={busy} disabled={!form.name.trim() || !passwordValid || form.confirm !== form.password}>
           {t('register')}
         </Button>
         <p className="center t-label text-muted mt-4" style={{ justifyContent: 'center' }}>

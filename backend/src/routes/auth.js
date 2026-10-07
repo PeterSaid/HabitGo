@@ -73,17 +73,26 @@ router.post(
     const id = uuid();
     const now = nowIso();
     const hash = bcrypt.hashSync(data.password, 10);
-    db.prepare(
-      `INSERT INTO users (id, email, phone, password_hash, role, status, date_of_birth, gender, country, city, created_at, updated_at)
-       VALUES (?,?,?,?,'user','active',?,?,?,?,?,?)`
-    ).run(id, data.email, data.phone || null, hash, data.date_of_birth || null, data.gender || null, data.country || null, data.city || null, now, now);
 
-    wallet.ensureProfile(id, data.name);
-    db.prepare('INSERT INTO user_settings (user_id, locale, theme, updated_at) VALUES (?,?,?,?,?)').run(
-      id, data.locale, data.theme, now
-    );
-    wallet.ensureWallet(id);
-    wallet.ensureUserStreak(id);
+    // Atomic: either the whole account exists or nothing does
+    db.exec('BEGIN IMMEDIATE');
+    try {
+      db.prepare(
+        `INSERT INTO users (id, email, phone, password_hash, role, status, date_of_birth, gender, country, city, created_at, updated_at)
+         VALUES (?,?,?,?,'user','active',?,?,?,?,?,?)`
+      ).run(id, data.email, data.phone || null, hash, data.date_of_birth || null, data.gender || null, data.country || null, data.city || null, now, now);
+
+      wallet.ensureProfile(id, data.name);
+      db.prepare('INSERT INTO user_settings (user_id, locale, theme, updated_at) VALUES (?,?,?,?)').run(
+        id, data.locale, data.theme, now
+      );
+      wallet.ensureWallet(id);
+      wallet.ensureUserStreak(id);
+      db.exec('COMMIT');
+    } catch (e) {
+      db.exec('ROLLBACK');
+      throw e;
+    }
 
     audit(req, 'auth.register', 'user', id);
     const user = db.prepare('SELECT * FROM users WHERE id = ?').get(id);

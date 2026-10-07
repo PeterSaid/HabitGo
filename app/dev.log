@@ -8,3 +8,8 @@
   [32m➜[39m  [1mLocal[22m:   [36mhttp://localhost:[1m5173[22m/[39m
   [32m➜[39m  [1mNetwork[22m: [36mhttp://192.168.1.85:[1m5173[22m/[39m
 [2m10:06:24 AM[22m [36m[1m[vite][22m[39m [32mpage reload [39m[2mpublic/qr.html[22m
+[2m10:18:23 AM[22m [31m[1m[vite][22m[39m [31mhttp proxy error: /api/v1/auth/register[39m
+AggregateError [ECONNREFUSED]: 
+    at internalConnectMultiple (node:net:1339:18)
+    at afterConnectMultiple (node:net:1942:7)
+[2m10:19:35 AM[22m [36m[1m[vite][22m[39m [32mhmr update [39m[2m/src/features/auth/Register.tsx[22m
