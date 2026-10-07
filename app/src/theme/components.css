@@ -87,7 +87,7 @@ html[dir='rtl'] .fab:active { transform: translateX(50%) scale(0.94); }
   width: 140px; height: 140px; border-radius: 50%;
   background: rgba(255, 255, 255, 0.14);
 }
-.card-gold { background: var(--gradient-gold); border: none; color: #3D2A00; }
+.card-gold { background: var(--gradient-gold); border: none; color: #FFFFFF; }
 
 /* ---------- Inputs ---------- */
 .field { display: flex; flex-direction: column; gap: var(--sp-2); margin-bottom: var(--sp-4); }

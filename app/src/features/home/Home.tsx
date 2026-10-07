@@ -209,7 +209,7 @@ export default function Home() {
               <div style={{ height: 8, borderRadius: 8, background: 'rgba(255,255,255,0.35)', overflow: 'hidden' }}>
                 <div style={{ height: '100%', width: `${nextRewardProgress}%`, background: '#7C4A00', borderRadius: 8, transition: 'width 500ms var(--ease)' }} />
               </div>
-              <span className="t-caption tnum" style={{ fontWeight: 600 }}>
+              <span className="t-caption tnum" style={{ fontWeight: 700, color: '#FFFFFF' }}>
                 {t('your_balance')}: {data.wallet.available} · {t('estimated_value')} ~{data.wallet.estimated_value}
               </span>
             </div>

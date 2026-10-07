@@ -127,3 +127,5 @@
 [2m9:30:39 AM[22m [36m[1m[vite][22m[39m [33mhmr invalidate [39m[2m/src/features/habits/HabitCard.tsx[22m Could not Fast Refresh ("localToday" export is incompatible). Learn more at https://github.com/vitejs/vite-plugin-react/tree/main/packages/plugin-react#consistent-components-exports
 [2m9:30:39 AM[22m [36m[1m[vite][22m[39m [32mhmr update [39m[2m/src/features/home/Home.tsx, /src/features/habits/AllHabits.tsx[22m
 [2m9:32:26 AM[22m [36m[1m[vite][22m[39m [32mpage reload [39m[2mandroid/app/src/main/assets/public/index.html[22m
+[2m9:32:44 AM[22m [36m[1m[vite][22m[39m [32mpage reload [39m[2mandroid/app/build/intermediates/assets/debug/public/index.html[22m
+[2m9:32:47 AM[22m [36m[1m[vite][22m[39m [32mpage reload [39m[2mandroid/app/build/intermediates/assets/release/public/index.html[22m
