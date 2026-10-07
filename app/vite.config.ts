@@ -5,6 +5,7 @@ export default defineConfig({
   plugins: [react()],
   server: {
     host: true, // expose on LAN so the phone can open the live-reload app
+    allowedHosts: true, // allow the temporary trycloudflare.com dev tunnel
     port: 5173,
     proxy: {
       '/api': {
