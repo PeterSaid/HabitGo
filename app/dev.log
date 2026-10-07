@@ -7,3 +7,24 @@
 
   [32m➜[39m  [1mLocal[22m:   [36mhttp://localhost:[1m5173[22m/[39m
 [2m  [32m➜[39m  [1mNetwork[22m[2m: use [22m[1m--host[22m[2m to expose[22m
+[2m1:43:46 AM[22m [36m[1m[vite][22m[39m [32mhmr update [39m[2m/src/features/rewards/RewardDetails.tsx[22m
+[2m8:40:17 AM[22m [36m[1m[vite][22m[39m [32mhmr update [39m[2m/src/layouts/AppLayout.tsx[22m
+[2m8:40:32 AM[22m [36m[1m[vite][22m[39m [32mhmr update [39m[2m/src/layouts/AppLayout.tsx[22m
+[2m8:45:15 AM[22m [36m[1m[vite][22m[39m [32mhmr update [39m[2m/src/features/habits/HabitForm.tsx[22m
+[2m8:45:15 AM[22m [36m[1m[vite][22m[39m [33mhmr invalidate [39m[2m/src/features/habits/HabitForm.tsx[22m Could not Fast Refresh ("localToday" export is incompatible). Learn more at https://github.com/vitejs/vite-plugin-react/tree/main/packages/plugin-react#consistent-components-exports
+[2m8:45:15 AM[22m [36m[1m[vite][22m[39m [32mhmr update [39m[2m/src/App.tsx[22m
+[2m8:46:51 AM[22m [36m[1m[vite][22m[39m [32mhmr update [39m[2m/src/features/auth/Login.tsx[22m
+[2m8:47:02 AM[22m [36m[1m[vite][22m[39m [32mhmr update [39m[2m/src/features/auth/Login.tsx[22m
+[2m8:47:24 AM[22m [36m[1m[vite][22m[39m [32mhmr update [39m[2m/src/features/auth/Login.tsx[22m
+[2m8:47:25 AM[22m [36m[1m[vite][22m[39m [32m✨ new dependencies optimized: [33m@capacitor/core[32m[39m
+[2m8:47:25 AM[22m [36m[1m[vite][22m[39m [32m✨ optimized dependencies changed. reloading[39m
+[2m8:48:10 AM[22m [36m[1m[vite][22m[39m [32mpage reload [39m[2mandroid/app/src/main/assets/public/index.html[22m
+[2m8:52:37 AM[22m [36m[1m[vite][22m[39m [32mpage reload [39m[2mandroid/app/src/main/assets/public/index.html[22m
+[2m8:53:06 AM[22m [36m[1m[vite][22m[39m [32mhmr update [39m[2m/src/layouts/AppLayout.tsx[22m
+[2m8:53:19 AM[22m [36m[1m[vite][22m[39m [32mhmr update [39m[2m/src/layouts/AppLayout.tsx[22m
+[2m8:53:21 AM[22m [36m[1m[vite][22m[39m [32m✨ new dependencies optimized: [33m@capacitor/local-notifications[32m[39m
+[2m8:53:21 AM[22m [36m[1m[vite][22m[39m [32m✨ optimized dependencies changed. reloading[39m
+[2m9:11:48 AM[22m [36m[1m[vite][22m[39m [32mpage reload [39m[2mandroid/app/build/intermediates/assets/debug/public/index.html[22m
+[2m9:18:01 AM[22m [36m[1m[vite][22m[39m [32mpage reload [39m[2mandroid/app/build/intermediates/assets/release/public/index.html[22m
+[2m9:18:04 AM[22m [36m[1m[vite][22m[39m [32mhmr update [39m[2m/src/features/stats/Statistics.tsx[22m
+[2m9:18:20 AM[22m [36m[1m[vite][22m[39m [32mhmr update [39m[2m/src/ui/charts.tsx[22m

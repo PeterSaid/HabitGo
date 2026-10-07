@@ -18,7 +18,7 @@ export function BarChart({ data, height = 130 }: { data: { label: string; value:
             {d.value > 0 && (
               <rect x={x} y={height - h} width={barW} height={h} rx={8} fill={d.highlight ? 'var(--primary)' : 'var(--primary-light)'} />
             )}
-            <text x={x + barW / 2} y={height + 16} textAnchor="middle" fontSize="11" fill="var(--text-3)">
+            <text x={x + barW / 2} y={height + 16} textAnchor="middle" fontSize={d.label.length > 4 ? 9.5 : 11} fill="var(--text-3)">
               {d.label}
             </text>
           </g>

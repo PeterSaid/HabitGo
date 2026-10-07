@@ -2,8 +2,25 @@
  * API client — wraps fetch with JWT auth, friendly error normalization,
  * and an offline queue for habit completions (spec section 61).
  */
+import { Capacitor } from '@capacitor/core';
 
-const BASE = import.meta.env.VITE_API_URL || '/api/v1';
+const SERVER_KEY = 'habitgo.serverUrl';
+
+/** Server base URL: user-configured (native builds) > build env > same-origin proxy. */
+export function getServerUrl(): string {
+  const saved = localStorage.getItem(SERVER_KEY);
+  if (saved) return saved.replace(/\/+$/, '');
+  if (import.meta.env.VITE_API_URL) return import.meta.env.VITE_API_URL;
+  if (Capacitor.isNativePlatform()) return 'http://10.0.2.2:4000/api/v1'; // emulator -> host machine
+  return '/api/v1';
+}
+
+export function setServerUrl(url: string | null) {
+  if (url && url.trim()) localStorage.setItem(SERVER_KEY, url.trim().replace(/\/+$/, ''));
+  else localStorage.removeItem(SERVER_KEY);
+}
+
+const BASE = getServerUrl();
 const TOKEN_KEY = 'habitgo.token';
 
 export class ApiError extends Error {

@@ -3,6 +3,7 @@ import { Outlet, useLocation, useNavigate } from 'react-router-dom';
 import { Gift, Home, Plus, User, ListChecks, WifiOff } from 'lucide-react';
 import { useI18n } from '../i18n';
 import { useStore } from '../state/store';
+import { useReminders } from '../utils/reminders';
 
 const TABS = [
   { path: '/', icon: Home, key: 'nav_home' },
@@ -17,6 +18,9 @@ export default function AppLayout() {
   const location = useLocation();
   const navigate = useNavigate();
   const { online } = useStore();
+
+  // Habit reminders (native: scheduled local notifications; web: due-soon hook)
+  useReminders(true);
 
   const isActive = (path: string) => {
     if (path === '/') return location.pathname === '/';

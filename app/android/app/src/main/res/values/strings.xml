@@ -1,0 +1,7 @@
+<?xml version='1.0' encoding='utf-8'?>
+<resources>
+    <string name="app_name">HabitGo</string>
+    <string name="title_activity_main">HabitGo</string>
+    <string name="package_name">com.habitgo.app</string>
+    <string name="custom_url_scheme">com.habitgo.app</string>
+</resources>

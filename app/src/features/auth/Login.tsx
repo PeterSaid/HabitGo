@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { api, ApiError } from '../../api/client';
+import { Capacitor } from '@capacitor/core';
+import { api, ApiError, getServerUrl, setServerUrl } from '../../api/client';
 import { useI18n } from '../../i18n';
 import type { TranslationKey } from '../../i18n/en';
 import { useStore } from '../../state/store';
@@ -15,6 +16,8 @@ export default function Login() {
   const [password, setPassword] = useState('');
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [server, setServer] = useState(getServerUrl());
+  const [showServer, setShowServer] = useState(false);
 
   const submit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -24,6 +27,7 @@ export default function Login() {
       return;
     }
     setBusy(true);
+    setServerUrl(server);
     try {
       const res = await api.post<{ token: string; user: never }>('/auth/login', { email: email.trim().toLowerCase(), password });
       applySession(res.token, res.user);
@@ -69,6 +73,19 @@ export default function Login() {
         <button type="button" className="btn-text" style={{ alignSelf: 'flex-end', color: 'var(--primary)' }} onClick={() => navigate('/forgot')}>
           {t('forgot_password')}
         </button>
+
+        {Capacitor.isNativePlatform() && (
+          <div className="mt-3">
+            <button type="button" className="btn-text" style={{ color: 'var(--text-3)', fontSize: 12 }} onClick={() => setShowServer(!showServer)}>
+              {showServer ? '▾' : '▸'} API server
+            </button>
+            {showServer && (
+              <Field label="API server URL">
+                <Input dir="ltr" value={server} onChange={(e) => setServer(e.target.value)} placeholder="http://192.168.1.10:4000/api/v1" />
+              </Field>
+            )}
+          </div>
+        )}
 
         <div className="grow" />
         <Button type="submit" block size="lg" loading={busy}>

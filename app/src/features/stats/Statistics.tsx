@@ -19,7 +19,7 @@ type Stats = {
 const WEEKDAY_KEYS = ['days_short_mon', 'days_short_tue', 'days_short_wed', 'days_short_thu', 'days_short_fri', 'days_short_sat', 'days_short_sun'] as const;
 
 export default function Statistics() {
-  const { t } = useI18n();
+  const { t, locale } = useI18n();
   const navigate = useNavigate();
   const [stats, setStats] = useState<Stats | null>(null);
   const [error, setError] = useState(false);
@@ -68,7 +68,8 @@ export default function Statistics() {
           <Card>
             <BarChart
               data={stats.weekly.days.map((d) => ({
-                label: t(WEEKDAY_KEYS[d.weekday - 1] as never).slice(0, 3),
+                // full day names in Arabic (slicing breaks letter shaping)
+                label: locale === 'ar' ? t(WEEKDAY_KEYS[d.weekday - 1] as never) : t(WEEKDAY_KEYS[d.weekday - 1] as never).slice(0, 3),
                 value: d.completed,
                 max: Math.max(1, d.scheduled),
                 highlight: d.date === stats.weekly.to,

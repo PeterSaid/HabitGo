@@ -4,6 +4,7 @@ import { getToken } from './api/client';
 import { I18nProvider } from './i18n';
 import { ThemeProvider } from './theme/ThemeContext';
 import { ToastProvider } from './ui/components';
+import ErrorBoundary from './ui/ErrorBoundary';
 import { AppStoreProvider, useStore } from './state/store';
 
 import Splash from './features/onboarding/Splash';
@@ -85,7 +86,8 @@ export default function App() {
       <ThemeProvider>
         <ToastProvider>
           <AppStoreProvider>
-            <div className="app-frame">
+            <ErrorBoundary>
+              <div className="app-frame">
               <Routes>
                 {/* Public */}
                 <Route path="/onboarding" element={<Onboarding />} />
@@ -135,7 +137,8 @@ export default function App() {
 
                 <Route path="*" element={<Navigate to="/" replace />} />
               </Routes>
-            </div>
+              </div>
+            </ErrorBoundary>
           </AppStoreProvider>
         </ToastProvider>
       </ThemeProvider>
