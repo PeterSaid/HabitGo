@@ -1,26 +1,24 @@
-const { db, nowIso, uuid } = require('../db');
+const { prepare, nowIso, uuid } = require('../db');
 const { notify } = require('./notifications');
 
 /** Counter sources used by achievement conditions. */
-function countersFor(userId) {
-  const habitCount = db
-    .prepare('SELECT COUNT(*) AS n FROM habits WHERE user_id = ? AND is_deleted = 0')
-    .get(userId).n;
-  const bestHabitStreak = db
-    .prepare('SELECT COALESCE(MAX(best_streak), 0) AS n FROM streaks WHERE user_id = ?')
-    .get(userId).n;
-  const us = db.prepare('SELECT * FROM user_streaks WHERE user_id = ?').get(userId);
-  const totalCompletions = db
-    .prepare("SELECT COUNT(*) AS n FROM habit_logs WHERE user_id = ? AND status = 'completed'")
-    .get(userId).n;
-  const redeemCount = db
-    .prepare("SELECT COUNT(*) AS n FROM reward_redemptions WHERE user_id = ? AND status != 'rejected'")
-    .get(userId).n;
-  const earlyBird = db
-    .prepare(
-      "SELECT COUNT(*) AS n FROM habit_logs WHERE user_id = ? AND status = 'completed' AND CAST(substr(created_at, 12, 2) AS INTEGER) < 9"
-    )
-    .get(userId).n; // created_at is UTC — acceptable proxy for MVP
+async function countersFor(userId) {
+  const habitCount = (await prepare(
+    'SELECT COUNT(*) AS n FROM habits WHERE user_id = ? AND is_deleted = 0'
+  ).get(userId)).n;
+  const bestHabitStreak = (await prepare(
+    'SELECT COALESCE(MAX(best_streak), 0) AS n FROM streaks WHERE user_id = ?'
+  ).get(userId)).n;
+  const us = await prepare('SELECT * FROM user_streaks WHERE user_id = ?').get(userId);
+  const totalCompletions = (await prepare(
+    "SELECT COUNT(*) AS n FROM habit_logs WHERE user_id = ? AND status = 'completed'"
+  ).get(userId)).n;
+  const redeemCount = (await prepare(
+    "SELECT COUNT(*) AS n FROM reward_redemptions WHERE user_id = ? AND status != 'rejected'"
+  ).get(userId)).n;
+  const earlyBird = (await prepare(
+    "SELECT COUNT(*) AS n FROM habit_logs WHERE user_id = ? AND status = 'completed' AND CAST(substr(created_at, 12, 2) AS INTEGER) < 9"
+  ).get(userId)).n; // created_at is UTC — acceptable proxy for MVP
   return {
     habit_count: habitCount,
     habit_streak: bestHabitStreak,
@@ -32,13 +30,11 @@ function countersFor(userId) {
   };
 }
 
-function categoryCompletions(userId, categoryId) {
-  return db
-    .prepare(
-      `SELECT COUNT(*) AS n FROM habit_logs hl JOIN habits h ON h.id = hl.habit_id
-       WHERE hl.user_id = ? AND hl.status = 'completed' AND h.category_id = ?`
-    )
-    .get(userId, categoryId).n;
+async function categoryCompletions(userId, categoryId) {
+  return (await prepare(
+    `SELECT COUNT(*) AS n FROM habit_logs hl JOIN habits h ON h.id = hl.habit_id
+     WHERE hl.user_id = ? AND hl.status = 'completed' AND h.category_id = ?`
+  ).get(userId, categoryId)).n;
 }
 
 /**
@@ -46,14 +42,14 @@ function categoryCompletions(userId, categoryId) {
  * Unlocks award bonus points (via creditEarned — respects daily cap) and XP,
  * and create a notification. Returns the list of newly unlocked achievements.
  */
-function evaluateAchievements(userId, { timezone = 'UTC', creditFn } = {}) {
+async function evaluateAchievements(userId, { timezone = 'UTC', creditFn } = {}) {
   const credit = creditFn || require('./wallet').creditEarned;
-  const counters = countersFor(userId);
+  const counters = await countersFor(userId);
   const unlocked = [];
 
-  const achievements = db.prepare('SELECT * FROM achievements WHERE is_active = 1 ORDER BY sort_order').all();
+  const achievements = await prepare('SELECT * FROM achievements WHERE is_active = 1 ORDER BY sort_order').all();
   const owned = new Set(
-    db.prepare('SELECT achievement_id FROM user_achievements WHERE user_id = ?').all(userId).map((r) => r.achievement_id)
+    (await prepare('SELECT achievement_id FROM user_achievements WHERE user_id = ?').all(userId)).map((r) => r.achievement_id)
   );
 
   for (const a of achievements) {
@@ -62,7 +58,7 @@ function evaluateAchievements(userId, { timezone = 'UTC', creditFn } = {}) {
     switch (a.condition_type) {
       case 'category_completions':
         satisfied = a.condition_meta
-          ? categoryCompletions(userId, a.condition_meta) >= a.threshold
+          ? (await categoryCompletions(userId, a.condition_meta)) >= a.threshold
           : false;
         break;
       default:
@@ -70,18 +66,18 @@ function evaluateAchievements(userId, { timezone = 'UTC', creditFn } = {}) {
     }
     if (!satisfied) continue;
 
-    const already = db
-      .prepare('SELECT 1 FROM user_achievements WHERE user_id = ? AND achievement_id = ?')
-      .get(userId, a.id);
+    const already = await prepare(
+      'SELECT 1 AS ok FROM user_achievements WHERE user_id = ? AND achievement_id = ?'
+    ).get(userId, a.id);
     if (already) continue;
 
-    db.prepare(
+    await prepare(
       'INSERT INTO user_achievements (id, user_id, achievement_id, points_awarded, achieved_at) VALUES (?,?,?,?,?)'
     ).run(uuid(), userId, a.id, a.points_bonus, nowIso());
     unlocked.push(a);
 
     if (a.points_bonus > 0) {
-      credit(userId, a.points_bonus, {
+      await credit(userId, a.points_bonus, {
         type: 'bonus',
         sourceType: 'achievement',
         sourceId: a.id,
@@ -91,10 +87,10 @@ function evaluateAchievements(userId, { timezone = 'UTC', creditFn } = {}) {
     } else {
       // XP still ticks for non-monetary achievements
       const { ensureProfile } = require('./wallet');
-      ensureProfile(userId, '—');
-      db.prepare('UPDATE profiles SET xp = xp + ?, updated_at = ? WHERE user_id = ?').run(a.xp_bonus, nowIso(), userId);
+      await ensureProfile(userId, '—');
+      await prepare('UPDATE profiles SET xp = xp + ?, updated_at = ? WHERE user_id = ?').run(a.xp_bonus, nowIso(), userId);
     }
-    notify(
+    await notify(
       userId,
       'achievement',
       `Achievement unlocked: ${a.name_en}`,

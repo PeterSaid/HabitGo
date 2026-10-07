@@ -47,7 +47,7 @@ export const ar: Record<TranslationKey, string> = {
   onboarding_start: 'ابدأ الآن',
 
   // Auth
-  login_title: 'أهلًا بعودتك 👋',
+  login_title: 'أهلًا بعودتك',
   login_subtitle: 'سجّل دخولك لتكمل بناء عاداتك',
   register_title: 'أنشئ حسابك',
   register_subtitle: 'ابدأ بناء عادات أفضل من اليوم',
@@ -389,10 +389,16 @@ export const ar: Record<TranslationKey, string> = {
   admin_redemptions: 'طلبات الاستبدال',
   admin_settings: 'إعدادات النظام',
   conversion_rate: 'النقاط لكل وحدة مكافأة',
+  availability: 'الكمية المتاحة',
   approve: 'موافقة',
   reject: 'رفض',
   complete_action: 'إكمال',
   suspend: 'إيقاف',
   activate: 'تفعيل',
   broadcast: 'إشعار جماعي',
+
+  // Add habit quick-pick
+  quick_pick: 'اختيار سريع',
+  quick_pick_ph: 'اختار عادة جاهزة — أو اكتبها بنفسك تحت',
+  custom_habit: 'عادة خاصة (اكتبها بنفسك)',
 };

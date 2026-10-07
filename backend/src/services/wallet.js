@@ -1,5 +1,4 @@
-const { db, nowIso, uuid } = require('../db');
-const { getSettingNumber } = require('../db');
+const { prepare, nowIso, uuid, getSettingNumber } = require('../db');
 const { todayIn } = require('../utils/dates');
 
 // XP levels (spec section 46). Index+1 = level.
@@ -24,23 +23,23 @@ function levelForXp(xp) {
   };
 }
 
-function ensureWallet(userId) {
-  db.prepare('INSERT OR IGNORE INTO points_wallets (user_id, updated_at) VALUES (?, ?)').run(userId, nowIso());
-  return db.prepare('SELECT * FROM points_wallets WHERE user_id = ?').get(userId);
+async function ensureWallet(userId) {
+  await prepare('INSERT OR IGNORE INTO points_wallets (user_id, updated_at) VALUES (?, ?)').run(userId, nowIso());
+  return prepare('SELECT * FROM points_wallets WHERE user_id = ?').get(userId);
 }
 
-function ensureUserStreak(userId) {
-  db.prepare('INSERT OR IGNORE INTO user_streaks (user_id, updated_at) VALUES (?, ?)').run(userId, nowIso());
+async function ensureUserStreak(userId) {
+  await prepare('INSERT OR IGNORE INTO user_streaks (user_id, updated_at) VALUES (?, ?)').run(userId, nowIso());
 }
 
-function ensureProfile(userId, name, extra = {}) {
+async function ensureProfile(userId, name, extra = {}) {
   const now = nowIso();
-  db.prepare(
+  await prepare(
     'INSERT OR IGNORE INTO profiles (user_id, name, timezone, created_at, updated_at) VALUES (?,?,?,?,?)'
   ).run(userId, name, extra.timezone || 'UTC', now, now);
 }
 
-function earnedToday(wallet, timezone) {
+async function earnedToday(wallet, timezone) {
   const today = todayIn(timezone);
   if (wallet.earned_today_date !== today) return 0;
   return wallet.earned_today;
@@ -51,38 +50,37 @@ function earnedToday(wallet, timezone) {
  * Enforces the daily earn cap (anti-cheat, spec section 36) and returns
  * the amount actually credited (may be less than requested).
  */
-function creditEarned(userId, points, { type = 'earn', sourceType, sourceId, description, timezone = 'UTC' } = {}) {
-  const wallet = ensureWallet(userId);
-  const cap = getSettingNumber('daily_points_cap', 500);
-  const room = Math.max(0, cap - earnedToday(wallet, timezone));
+async function creditEarned(userId, points, { type = 'earn', sourceType, sourceId, description, timezone = 'UTC' } = {}) {
+  const wallet = await ensureWallet(userId);
+  const cap = await getSettingNumber('daily_points_cap', 500);
+  const room = Math.max(0, cap - (await earnedToday(wallet, timezone)));
   const credited = Math.min(points, room);
   const capped = credited < points;
 
   if (credited > 0) {
     const today = todayIn(timezone);
     const todayBase = wallet.earned_today_date === today ? wallet.earned_today : 0;
-    db.prepare(
+    await prepare(
       `UPDATE points_wallets SET available = available + ?, lifetime = lifetime + ?,
         earned_today_date = ?, earned_today = ?, updated_at = ? WHERE user_id = ?`
     ).run(credited, credited, today, todayBase + credited, nowIso(), userId);
-    db.prepare(
+    await prepare(
       `INSERT INTO points_transactions (id, user_id, type, source_type, source_id, points, status, description, created_at)
        VALUES (?,?,?,?,?,?, 'completed', ?, ?)`
     ).run(uuid(), userId, type, sourceType, sourceId || null, credited, description, nowIso());
-    db.prepare('UPDATE profiles SET xp = xp + ?, updated_at = ? WHERE user_id = ?').run(credited, nowIso(), userId);
+    await prepare('UPDATE profiles SET xp = xp + ?, updated_at = ? WHERE user_id = ?').run(credited, nowIso(), userId);
   }
 
   return { credited, capped };
 }
 
 /** Move points from available to pending for a redemption (transaction stays pending until admin finalizes). */
-function holdForRedemption(userId, points, { sourceId, description }) {
-  const wallet = ensureWallet(userId);
-  db.prepare('UPDATE points_wallets SET available = available - ?, pending = pending + ?, updated_at = ? WHERE user_id = ?').run(
+async function holdForRedemption(userId, points, { sourceId, description }) {
+  await prepare('UPDATE points_wallets SET available = available - ?, pending = pending + ?, updated_at = ? WHERE user_id = ?').run(
     points, points, nowIso(), userId
   );
   const txId = uuid();
-  db.prepare(
+  await prepare(
     `INSERT INTO points_transactions (id, user_id, type, source_type, source_id, points, status, description, created_at)
      VALUES (?,?,?,?,?,?, 'pending', ?, ?)`
   ).run(txId, userId, 'redeem', 'redemption', sourceId, -points, description, nowIso());
@@ -90,37 +88,36 @@ function holdForRedemption(userId, points, { sourceId, description }) {
 }
 
 /** Redemption approved/completed: pending -> redeemed. */
-function finalizeRedemption(userId, points, txId) {
-  db.prepare('UPDATE points_wallets SET pending = pending - ?, redeemed = redeemed + ?, updated_at = ? WHERE user_id = ?').run(
+async function finalizeRedemption(userId, points, txId) {
+  await prepare('UPDATE points_wallets SET pending = pending - ?, redeemed = redeemed + ?, updated_at = ? WHERE user_id = ?').run(
     points, points, nowIso(), userId
   );
-  db.prepare("UPDATE points_transactions SET status = 'completed' WHERE id = ?").run(txId);
+  await prepare("UPDATE points_transactions SET status = 'completed' WHERE id = ?").run(txId);
 }
 
 /** Redemption rejected: return points to available. */
-function refundRedemption(userId, points, originalTxId) {
-  const wallet = ensureWallet(userId);
-  db.prepare('UPDATE points_wallets SET pending = pending - ?, available = available + ?, updated_at = ? WHERE user_id = ?').run(
+async function refundRedemption(userId, points, originalTxId) {
+  await prepare('UPDATE points_wallets SET pending = pending - ?, available = available + ?, updated_at = ? WHERE user_id = ?').run(
     points, points, nowIso(), userId
   );
-  db.prepare("UPDATE points_transactions SET status = 'completed' WHERE id = ?").run(originalTxId);
-  db.prepare(
+  await prepare("UPDATE points_transactions SET status = 'completed' WHERE id = ?").run(originalTxId);
+  await prepare(
     `INSERT INTO points_transactions (id, user_id, type, source_type, source_id, points, status, description, created_at)
      VALUES (?,?,?,?,?,?, 'completed', ?, ?)`
   ).run(uuid(), userId, 'refund', 'redemption', originalTxId, points, 'Refund — redemption rejected', nowIso());
 }
 
 /** Reverse part/all of a habit log's earned points (uncomplete within cutoff). */
-function reverseHabitPoints(userId, points, { sourceId, description }) {
+async function reverseHabitPoints(userId, points, { sourceId, description }) {
   if (points <= 0) return;
-  db.prepare('UPDATE points_wallets SET available = available - ?, lifetime = lifetime - ?, updated_at = ? WHERE user_id = ?').run(
+  await prepare('UPDATE points_wallets SET available = available - ?, lifetime = lifetime - ?, updated_at = ? WHERE user_id = ?').run(
     points, points, nowIso(), userId
   );
-  db.prepare(
+  await prepare(
     `INSERT INTO points_transactions (id, user_id, type, source_type, source_id, points, status, description, created_at)
      VALUES (?,?,?,?,?,?, 'completed', ?, ?)`
   ).run(uuid(), userId, 'adjustment', 'habit_log', sourceId, -points, description, nowIso());
-  db.prepare('UPDATE profiles SET xp = MAX(0, xp - ?), updated_at = ? WHERE user_id = ?').run(points, nowIso(), userId);
+  await prepare('UPDATE profiles SET xp = MAX(0, xp - ?), updated_at = ? WHERE user_id = ?').run(points, nowIso(), userId);
 }
 
 module.exports = {

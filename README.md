@@ -15,7 +15,7 @@ HabitGo is not a UI mockup — it is a functional MVP:
 |---|---|---|
 | Mobile app | React 18 + TypeScript + Vite, wrapped with **Capacitor 6** for Android | `app/` |
 | API + business logic | **Node.js + Express**, all points/streak/redeem logic **server-side** | `backend/` |
-| Database | **SQLite** (via Node's built-in `node:sqlite`, zero native deps) | `backend/data/habitgo.db` |
+| Database | **SQLite via libSQL** (`@libsql/client`) — local file by default, or hosted **Turso** with `DATABASE_URL` | `backend/data/habitgo.db` |
 | Auth | JWT (30-day sessions) + bcrypt password hashing | `backend/src/routes/auth.js` |
 
 The requirements specification (103 sections) lives in [`docs/requirements-spec.md`](docs/requirements-spec.md).
@@ -101,13 +101,16 @@ Backend (`backend/.env`, see `.env.example`):
 | Variable | Default | Purpose |
 |---|---|---|
 | `PORT` | `4000` | API port |
+| `DATABASE_URL` | local file DB | Turso URL (`libsql://…`) for hosted/permanent storage |
+| `DATABASE_TOKEN` | — | Turso auth token (required with `DATABASE_URL`) |
 | `JWT_SECRET` | dev value | **Change in production** |
 | `JWT_EXPIRES_IN` | `30d` | Session length |
 | `NODE_ENV` | `development` | `production` hides reset tokens |
+| `CORS_ORIGINS` | `*` | Comma-separated origins for a locked-down deployment |
 | `SEED_USER_PASSWORD` | `Peter@12345` | Demo user password |
 | `SEED_ADMIN_PASSWORD` | `Admin@12345` | Demo admin password |
 
-Frontend (`app`, optional `VITE_API_URL`): absolute API URL for native builds. In the APK you can also set the server URL at runtime from the login screen ("API server" section).
+Frontend (`app`, optional `VITE_API_URL`): absolute API URL baked into native builds. **Important:** build the APK with `VITE_API_URL=https://your-host/api/v1` — there is no runtime server switch in the UI. Without it, native builds fall back to the emulator alias `http://10.0.2.2:4000/api/v1`.
 
 ## Backend API (v1)
 
@@ -120,6 +123,20 @@ Admin-editable system settings (never hardcoded client-side, spec §71): `points
 SQLite — zero setup. The schema (`backend/src/schema.sql`) is applied automatically on first boot; seed with `npm run seed` (or `npm run seed:fresh` to reset). The schema maps 1:1 to the spec's table list (§62): users, profiles, habits, habit_categories, habit_schedules, habit_logs, streaks, points_wallets, points_transactions, rewards, reward_categories, reward_partners, reward_redemptions, achievements, user_achievements, challenges, challenge_participants, notifications, user_settings, devices, audit_logs (+ app_settings).
 
 To migrate to PostgreSQL/Supabase later: the SQL is standard; swap `db.js` for a Postgres client and replace the wallet/points updates with a transaction block — the service layer is already organized for this.
+
+## Deploy Online (backend + hosted database)
+
+The backend runs unchanged against a hosted **Turso** (libSQL) database — set `DATABASE_URL` + `DATABASE_TOKEN` and everything persists in the cloud. A [`render.yaml`](render.yaml) blueprint deploys the whole thing (backend + built web app, single origin) to Render free tier. Full Arabic step-by-step guide: **[docs/DEPLOY-AR.md](docs/DEPLOY-AR.md)** — includes seeding the hosted DB, wiring the APK to the deployed URL (login screen → "API server"), and how to browse/edit the hosted data.
+
+## Brand Assets
+
+All app icons (launcher, adaptive, round), splash screens (native + PWA) are generated from the master logo:
+
+```bash
+cd app && node scripts/generate-icons.cjs   # reads D:/Frame 2608648.png, writes app/src/assets, public/, android res/
+```
+
+The web build also ships a PWA manifest (`public/manifest.webmanifest`) with regular + maskable icons, so installing from a browser uses the same brand icon.
 
 ## How to Build the Android APK
 

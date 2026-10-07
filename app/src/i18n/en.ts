@@ -45,7 +45,7 @@ export const en = {
   onboarding_start: 'Get Started',
 
   // Auth (sections 21-22)
-  login_title: 'Welcome back 👋',
+  login_title: 'Welcome back',
   login_subtitle: 'Log in to continue building your habits',
   register_title: 'Create your account',
   register_subtitle: 'Start building better habits today',
@@ -388,12 +388,18 @@ export const en = {
   admin_redemptions: 'Redemptions',
   admin_settings: 'System settings',
   conversion_rate: 'Points per reward unit',
+  availability: 'In stock',
   approve: 'Approve',
   reject: 'Reject',
   complete_action: 'Complete',
   suspend: 'Suspend',
   activate: 'Activate',
   broadcast: 'Broadcast notification',
+
+  // Add habit quick-pick
+  quick_pick: 'Quick pick',
+  quick_pick_ph: 'Pick a ready habit — or write your own below',
+  custom_habit: 'Custom habit (write it yourself)',
 } as const;
 
 export type TranslationKey = keyof typeof en;

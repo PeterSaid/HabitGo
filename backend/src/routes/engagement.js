@@ -1,5 +1,5 @@
 const express = require('express');
-const { db, nowIso } = require('../db');
+const { prepare, nowIso } = require('../db');
 const { asyncHandler, notFound } = require('../utils/http');
 const { requireAuth } = require('../middleware/auth');
 const challengesService = require('../services/challenges');
@@ -10,9 +10,9 @@ router.use(requireAuth);
 router.get(
   '/challenges',
   asyncHandler(async (req, res) => {
-    const rows = db.prepare('SELECT * FROM challenges WHERE is_active = 1 ORDER BY duration_days ASC').all();
+    const rows = await prepare('SELECT * FROM challenges WHERE is_active = 1 ORDER BY duration_days ASC').all();
     const mine = new Map(
-      db.prepare('SELECT * FROM challenge_participants WHERE user_id = ?').all(req.user.id).map((p) => [p.challenge_id, p])
+      (await prepare('SELECT * FROM challenge_participants WHERE user_id = ?').all(req.user.id)).map((p) => [p.challenge_id, p])
     );
     res.json({
       challenges: rows.map((c) => ({
@@ -38,13 +38,11 @@ router.get(
 router.get(
   '/challenges/mine',
   asyncHandler(async (req, res) => {
-    const rows = db
-      .prepare(
-        `SELECT cp.*, c.name_en, c.name_ar, c.description_en, c.description_ar, c.icon, c.duration_days, c.target_days, c.points_bonus
-         FROM challenge_participants cp JOIN challenges c ON c.id = cp.challenge_id
-         WHERE cp.user_id = ? ORDER BY cp.joined_at DESC`
-      )
-      .all(req.user.id);
+    const rows = await prepare(
+      `SELECT cp.*, c.name_en, c.name_ar, c.description_en, c.description_ar, c.icon, c.duration_days, c.target_days, c.points_bonus
+       FROM challenge_participants cp JOIN challenges c ON c.id = cp.challenge_id
+       WHERE cp.user_id = ? ORDER BY cp.joined_at DESC`
+    ).all(req.user.id);
     res.json({
       challenges: rows.map((r) => ({
         id: r.challenge_id,
@@ -67,11 +65,11 @@ router.get(
 router.get(
   '/challenges/:id',
   asyncHandler(async (req, res) => {
-    const c = db.prepare('SELECT * FROM challenges WHERE id = ? AND is_active = 1').get(req.params.id);
+    const c = await prepare('SELECT * FROM challenges WHERE id = ? AND is_active = 1').get(req.params.id);
     if (!c) throw notFound('Challenge not found');
-    const p = db
-      .prepare('SELECT * FROM challenge_participants WHERE challenge_id = ? AND user_id = ?')
-      .get(c.id, req.user.id);
+    const p = await prepare(
+      'SELECT * FROM challenge_participants WHERE challenge_id = ? AND user_id = ?'
+    ).get(c.id, req.user.id);
     res.json({
       challenge: {
         ...c,
@@ -84,7 +82,7 @@ router.get(
 router.post(
   '/challenges/:id/join',
   asyncHandler(async (req, res) => {
-    const result = challengesService.joinChallenge(req.user.id, req.params.id);
+    const result = await challengesService.joinChallenge(req.user.id, req.params.id);
     if (!result) throw notFound('Challenge not found');
     res.status(result.already ? 200 : 201).json(result);
   })
@@ -93,9 +91,9 @@ router.post(
 router.get(
   '/achievements',
   asyncHandler(async (req, res) => {
-    const all = db.prepare('SELECT * FROM achievements WHERE is_active = 1 ORDER BY sort_order').all();
+    const all = await prepare('SELECT * FROM achievements WHERE is_active = 1 ORDER BY sort_order').all();
     const mine = new Map(
-      db.prepare('SELECT * FROM user_achievements WHERE user_id = ?').all(req.user.id).map((r) => [r.achievement_id, r])
+      (await prepare('SELECT * FROM user_achievements WHERE user_id = ?').all(req.user.id)).map((r) => [r.achievement_id, r])
     );
     res.json({
       achievements: all.map((a) => {
@@ -121,12 +119,12 @@ router.get(
   '/notifications',
   asyncHandler(async (req, res) => {
     const limit = Math.min(Number(req.query.limit) || 50, 100);
-    const rows = db
-      .prepare('SELECT * FROM notifications WHERE user_id = ? ORDER BY created_at DESC LIMIT ?')
-      .all(req.user.id, limit);
-    const unread = db
-      .prepare('SELECT COUNT(*) AS n FROM notifications WHERE user_id = ? AND is_read = 0')
-      .get(req.user.id).n;
+    const rows = await prepare(
+      'SELECT * FROM notifications WHERE user_id = ? ORDER BY created_at DESC LIMIT ?'
+    ).all(req.user.id, limit);
+    const unread = (await prepare(
+      'SELECT COUNT(*) AS n FROM notifications WHERE user_id = ? AND is_read = 0'
+    ).get(req.user.id)).n;
     res.json({ notifications: rows, unread });
   })
 );
@@ -134,7 +132,7 @@ router.get(
 router.post(
   '/notifications/:id/read',
   asyncHandler(async (req, res) => {
-    db.prepare('UPDATE notifications SET is_read = 1 WHERE id = ? AND user_id = ?').run(req.params.id, req.user.id);
+    await prepare('UPDATE notifications SET is_read = 1 WHERE id = ? AND user_id = ?').run(req.params.id, req.user.id);
     res.json({ ok: true });
   })
 );
@@ -142,7 +140,7 @@ router.post(
 router.post(
   '/notifications/read-all',
   asyncHandler(async (req, res) => {
-    db.prepare('UPDATE notifications SET is_read = 1 WHERE user_id = ?').run(req.user.id);
+    await prepare('UPDATE notifications SET is_read = 1 WHERE user_id = ?').run(req.user.id);
     res.json({ ok: true });
   })
 );

@@ -1,6 +1,6 @@
 const express = require('express');
-const { db, nowIso, uuid } = require('../db');
-const { asyncHandler, notFound, badRequest, forbidden, conflict } = require('../utils/http');
+const { prepare, nowIso, uuid } = require('../db');
+const { asyncHandler, notFound, conflict, forbidden } = require('../utils/http');
 const { requireAuth } = require('../middleware/auth');
 const walletService = require('../services/wallet');
 const { notify } = require('../services/notifications');
@@ -9,16 +9,16 @@ const { evaluateAchievements } = require('../services/achievements');
 const router = express.Router();
 router.use(requireAuth);
 
-function serializeReward(r, lang = 'en') {
+async function serializeReward(r, lang = 'en') {
   const name = lang === 'ar' ? r.name_ar : r.name_en;
   const description = lang === 'ar' ? r.description_ar : r.description_en;
   const partner = r.partner_id
-    ? db.prepare('SELECT id, name_en, name_ar, logo FROM reward_partners WHERE id = ?').get(r.partner_id)
+    ? await prepare('SELECT id, name_en, name_ar, logo FROM reward_partners WHERE id = ?').get(r.partner_id)
     : null;
   const category = r.category_id
-    ? db.prepare('SELECT id, name_en, name_ar, icon FROM reward_categories WHERE id = ?').get(r.category_id)
+    ? await prepare('SELECT id, name_en, name_ar, icon FROM reward_categories WHERE id = ?').get(r.category_id)
     : null;
-  const out = {
+  return {
     id: r.id,
     name,
     name_en: r.name_en,
@@ -36,7 +36,6 @@ function serializeReward(r, lang = 'en') {
     partner: partner ? { id: partner.id, name: lang === 'ar' ? partner.name_ar : partner.name_en, logo: partner.logo } : null,
     category: category ? { id: category.id, name: lang === 'ar' ? category.name_ar : category.name_en, icon: category.icon } : null,
   };
-  return out;
 }
 
 router.get(
@@ -57,19 +56,19 @@ router.get(
       params.push(like, like, like, like);
     }
     sql += ' ORDER BY sort_order, points_cost ASC';
-    const rows = db.prepare(sql).all(...params);
-    res.json({ rewards: rows.map((r) => serializeReward(r, lang)) });
+    const rows = await prepare(sql).all(...params);
+    res.json({ rewards: await Promise.all(rows.map((r) => serializeReward(r, lang))) });
   })
 );
 
 router.get(
   '/rewards/:id',
   asyncHandler(async (req, res) => {
-    const r = db.prepare('SELECT * FROM rewards WHERE id = ? AND is_active = 1').get(req.params.id);
+    const r = await prepare('SELECT * FROM rewards WHERE id = ? AND is_active = 1').get(req.params.id);
     if (!r) throw notFound('Reward not found');
     const lang = req.query.lang === 'ar' ? 'ar' : 'en';
-    const w = walletService.ensureWallet(req.user.id);
-    res.json({ reward: serializeReward(r, lang), wallet: { available: w.available } });
+    const w = await walletService.ensureWallet(req.user.id);
+    res.json({ reward: await serializeReward(r, lang), wallet: { available: w.available } });
   })
 );
 
@@ -82,12 +81,12 @@ router.get(
 router.post(
   '/rewards/:id/redeem',
   asyncHandler(async (req, res) => {
-    const r = db.prepare('SELECT * FROM rewards WHERE id = ? AND is_active = 1').get(req.params.id);
+    const r = await prepare('SELECT * FROM rewards WHERE id = ? AND is_active = 1').get(req.params.id);
     if (!r) throw notFound('Reward not found');
     if (r.expiry_date && r.expiry_date < nowIso().slice(0, 10)) throw conflict('This reward has expired', 'expired');
     if (r.stock !== null && r.stock <= 0) throw conflict('This reward is out of stock', 'out_of_stock');
 
-    const w = walletService.ensureWallet(req.user.id);
+    const w = await walletService.ensureWallet(req.user.id);
     if (w.available < r.points_cost) {
       throw forbidden(`You need ${r.points_cost - w.available} more points for this reward`, 'insufficient_points');
     }
@@ -100,27 +99,26 @@ router.post(
         ? `HG-${r.id.slice(0, 4).toUpperCase()}-${Math.random().toString(36).slice(2, 8).toUpperCase()}`
         : null;
 
-    const txId = walletService.holdForRedemption(uid, r.points_cost, {
+    const txId = await walletService.holdForRedemption(uid, r.points_cost, {
       sourceId: id,
       description: r.redemption_type === 'cash' ? 'Cash reward request' : `Redeemed: ${r.name_en}`,
     });
 
-    db.prepare(
+    await prepare(
       `INSERT INTO reward_redemptions (id, user_id, reward_id, points_cost, status, redemption_code, requested_at)
        VALUES (?,?,?,?, 'pending', ?, ?)`
     ).run(id, uid, r.id, r.points_cost, code, now);
-    db.prepare('UPDATE points_transactions SET source_id = ? WHERE id = ?').run(id, txId);
+    await prepare('UPDATE points_transactions SET source_id = ? WHERE id = ?').run(id, txId);
 
     if (r.stock !== null) {
-      db.prepare('UPDATE rewards SET stock = stock - 1, updated_at = ? WHERE id = ?').run(now, r.id);
+      await prepare('UPDATE rewards SET stock = stock - 1, updated_at = ? WHERE id = ?').run(now, r.id);
     }
 
     if (r.redemption_type === 'code') {
       // Codes are fulfilled immediately; manual/cash need admin review
-      const red = db.prepare('SELECT * FROM reward_redemptions WHERE id = ?').get(id);
-      db.prepare("UPDATE reward_redemptions SET status = 'completed', completed_at = ? WHERE id = ?").run(now, id);
-      walletService.finalizeRedemption(uid, r.points_cost, txId);
-      notify(
+      await prepare("UPDATE reward_redemptions SET status = 'completed', completed_at = ? WHERE id = ?").run(now, id);
+      await walletService.finalizeRedemption(uid, r.points_cost, txId);
+      await notify(
         uid,
         'reward',
         'Reward redeemed 🎁',
@@ -129,15 +127,15 @@ router.post(
         `كودك لـ ${r.name_ar}: ${code}`,
         { redemption_id: id }
       );
-      evaluateAchievements(uid);
-      const fresh = db.prepare('SELECT * FROM reward_redemptions WHERE id = ?').get(id);
+      await evaluateAchievements(uid);
+      const fresh = await prepare('SELECT * FROM reward_redemptions WHERE id = ?').get(id);
       return res.status(201).json({
-        redemption: { ...fresh, reward: serializeReward(r) },
-        wallet: walletService.ensureWallet(uid),
+        redemption: { ...fresh, reward: await serializeReward(r) },
+        wallet: await walletService.ensureWallet(uid),
       });
     }
 
-    notify(
+    await notify(
       uid,
       'reward',
       r.redemption_type === 'cash' ? 'Cash request submitted' : 'Redemption request submitted',
@@ -146,10 +144,10 @@ router.post(
       'تم استلام طلبك وسيتم مراجعته قريبًا.',
       { redemption_id: id }
     );
-    const red = db.prepare('SELECT * FROM reward_redemptions WHERE id = ?').get(id);
+    const red = await prepare('SELECT * FROM reward_redemptions WHERE id = ?').get(id);
     res.status(201).json({
-      redemption: { ...red, reward: serializeReward(r) },
-      wallet: walletService.ensureWallet(uid),
+      redemption: { ...red, reward: await serializeReward(r) },
+      wallet: await walletService.ensureWallet(uid),
     });
   })
 );
@@ -157,13 +155,11 @@ router.post(
 router.get(
   '/redemptions',
   asyncHandler(async (req, res) => {
-    const rows = db
-      .prepare(
-        `SELECT rr.*, r.name_en, r.name_ar, r.image, r.redemption_type, r.cash_amount
-         FROM reward_redemptions rr JOIN rewards r ON r.id = rr.reward_id
-         WHERE rr.user_id = ? ORDER BY rr.requested_at DESC LIMIT 100`
-      )
-      .all(req.user.id);
+    const rows = await prepare(
+      `SELECT rr.*, r.name_en, r.name_ar, r.image, r.redemption_type, r.cash_amount
+       FROM reward_redemptions rr JOIN rewards r ON r.id = rr.reward_id
+       WHERE rr.user_id = ? ORDER BY rr.requested_at DESC LIMIT 100`
+    ).all(req.user.id);
     res.json({
       redemptions: rows.map((r) => ({
         id: r.id,

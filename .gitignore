@@ -17,3 +17,7 @@ app/android/app/src/main/assets/public/
 *.keystore
 !debug.keystore
 **/vendor/
+
+apk/
+*.log
+debug-*.keystore

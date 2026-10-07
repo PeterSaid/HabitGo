@@ -4,6 +4,7 @@ import { api } from '../../api/client';
 import { useI18n } from '../../i18n';
 import { AppBar, Button, Card, Field, Input, Select, Textarea } from '../../ui/components';
 import { HABIT_ICON_KEYS, HabitIcon, CATEGORY_COLORS } from '../../ui/HabitIcon';
+import { HABIT_PRESETS, type HabitPreset } from './habitPresets';
 
 type FreqType = 'daily' | 'weekly_days' | 'times_per_week' | 'times_per_month';
 type HabitType = 'binary' | 'quantitative';
@@ -20,6 +21,11 @@ const DAY_KEYS = ['days_short_sun', 'days_short_mon', 'days_short_tue', 'days_sh
 const POINTS_BY_DIFF = { easy: 10, medium: 20, hard: 30 } as const;
 const PALETTE = ['#22C55E', '#14B8A6', '#3B82F6', '#8B5CF6', '#F59E0B', '#EF4444', '#EC4899', '#0EA5E9', '#84CC16', '#6366F1'];
 
+// The form works with JS weekdays (0=Sun..6=Sat) while the API contract is
+// ISO weekdays (1=Mon..7=Sun) — convert at the boundary.
+const toIsoDays = (days: number[]) => days.map((d) => (d === 0 ? 7 : d));
+const fromIsoDays = (days: number[]) => days.map((d) => (d === 7 ? 0 : d));
+
 export default function HabitForm() {
   const { t, locale } = useI18n();
   const navigate = useNavigate();
@@ -30,6 +36,7 @@ export default function HabitForm() {
   const [existing, setExisting] = useState<HabitFull | null>(null);
   const [busy, setBusy] = useState(false);
   const [formError, setFormError] = useState<string | null>(null);
+  const [presetId, setPresetId] = useState('');
 
   const [form, setForm] = useState({
     name: '',
@@ -76,17 +83,35 @@ export default function HabitForm() {
         start_date: h.start_date,
         end_date: h.end_date || '',
         freq_type: h.schedule.freq_type,
-        days_of_week: h.schedule.days_of_week || [],
+        days_of_week: fromIsoDays(h.schedule.days_of_week || []),
         times_per_week: h.schedule.times_per_week || 3,
         times_per_month: h.schedule.times_per_month || 10,
         reminder_time: h.schedule.reminder_time || '',
-        reminder_days: h.schedule.reminder_days || [],
+        reminder_days: fromIsoDays(h.schedule.reminder_days || []),
         reminder_message: h.schedule.reminder_message || '',
       });
     });
   }, [id]);
 
   const set = <K extends keyof typeof form>(k: K, v: (typeof form)[K]) => setForm((f) => ({ ...f, [k]: v }));
+
+  /** Quick-pick: fill name (current locale) + category (drives color) + icon + goal. */
+  const applyPreset = (id: string) => {
+    setPresetId(id);
+    if (id === 'custom' || !id) return;
+    const p = HABIT_PRESETS.find((x) => x.id === id);
+    if (!p) return;
+    setForm((f) => ({
+      ...f,
+      name: locale === 'ar' ? p.ar : p.en,
+      category_id: p.category,
+      color: CATEGORY_COLORS[p.category] || f.color,
+      icon: p.icon,
+      type: p.type ?? 'binary',
+      goal_value: p.goal ?? f.goal_value,
+      goal_unit: p.type === 'quantitative' ? (locale === 'ar' ? p.unit_ar || '' : p.unit_en || '') : f.goal_unit,
+    }));
+  };
 
   const toggleDay = (day: number, key: 'days_of_week' | 'reminder_days') => {
     const list = form[key];
@@ -124,11 +149,11 @@ export default function HabitForm() {
         start_date: form.start_date,
         end_date: form.end_date || undefined,
         freq_type: form.freq_type,
-        days_of_week: form.freq_type === 'weekly_days' ? form.days_of_week : undefined,
+        days_of_week: form.freq_type === 'weekly_days' ? toIsoDays(form.days_of_week) : undefined,
         times_per_week: form.freq_type === 'times_per_week' ? Number(form.times_per_week) : undefined,
         times_per_month: form.freq_type === 'times_per_month' ? Number(form.times_per_month) : undefined,
         reminder_time: form.reminder_time || undefined,
-        reminder_days: form.reminder_time ? (form.reminder_days.length ? form.reminder_days : [1, 2, 3, 4, 5, 6, 7]) : undefined,
+        reminder_days: form.reminder_time ? (form.reminder_days.length ? toIsoDays(form.reminder_days) : [1, 2, 3, 4, 5, 6, 7]) : undefined,
         reminder_message: form.reminder_message.trim() || undefined,
       };
       if (editing) {
@@ -158,6 +183,18 @@ export default function HabitForm() {
     <div className="page page-no-nav" style={{ paddingBottom: 'calc(var(--nav-height) + var(--sp-6))' }}>
       <AppBar title={editing ? t('edit_habit') : t('add_habit')} onBack={() => navigate(-1)} />
       <form onSubmit={submit} className="mt-4" noValidate>
+        {!editing && (
+          <Field label={t('quick_pick')}>
+            <Select value={presetId} onChange={(e) => applyPreset(e.target.value)}>
+              <option value="">{t('quick_pick_ph')}</option>
+              {HABIT_PRESETS.map((p) => (
+                <option key={p.id} value={p.id}>{locale === 'ar' ? p.ar : p.en}</option>
+              ))}
+              <option value="custom">✏️ {t('custom_habit')}</option>
+            </Select>
+          </Field>
+        )}
+
         <Field label={t('habit_name')}>
           <Input value={form.name} onChange={(e) => set('name', e.target.value)} placeholder={t('habit_name_ph')} maxLength={80} />
         </Field>

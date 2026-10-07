@@ -41,3 +41,7 @@ AggregateError [ECONNREFUSED]:
 [2m11:07:34 AM[22m [36m[1m[vite][22m[39m [32mpage reload [39m[2mindex.html[22m
 [2m11:08:26 AM[22m [36m[1m[vite][22m[39m [32mhmr update [39m[2m/src/features/onboarding/Onboarding.tsx[22m
 [2m11:08:46 AM[22m [36m[1m[vite][22m[39m [32mhmr update [39m[2m/src/features/onboarding/Onboarding.tsx[22m
+[2m11:12:02 AM[22m [36m[1m[vite][22m[39m [32mpage reload [39m[2mandroid/app/src/main/assets/public/qr.html[22m
+[2m11:12:02 AM[22m [36m[1m[vite][22m[39m [32mpage reload [39m[2mandroid/app/src/main/assets/public/index.html[22m
+[2m11:12:26 AM[22m [36m[1m[vite][22m[39m [32mpage reload [39m[2mandroid/app/build/intermediates/assets/debug/public/index.html[22m
+[2m11:12:31 AM[22m [36m[1m[vite][22m[39m [32mpage reload [39m[2mandroid/app/build/intermediates/assets/release/public/index.html[22m

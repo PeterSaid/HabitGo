@@ -1,18 +1,21 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { Eye, EyeOff, Globe } from 'lucide-react';
 import { api, ApiError } from '../../api/client';
 import { useI18n } from '../../i18n';
 import type { TranslationKey } from '../../i18n/en';
 import { useStore } from '../../state/store';
 import { Button, Field, Input } from '../../ui/components';
 import logoUrl from '../../assets/logo.png';
+import waveEmoji from '../../assets/emoji-wave-3d.png';
 
 export default function Login() {
-  const { t, locale } = useI18n();
+  const { t, locale, setLocale } = useI18n();
   const navigate = useNavigate();
   const { applySession } = useStore();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [showPassword, setShowPassword] = useState(false);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -39,10 +42,39 @@ export default function Login() {
   };
 
   return (
-    <div className="page page-no-nav" style={{ minHeight: '100dvh', display: 'flex', flexDirection: 'column' }}>
+    <div
+      className="page page-no-nav"
+      style={{ minHeight: '100dvh', display: 'flex', flexDirection: 'column', position: 'relative' }}
+    >
+      <button
+        type="button"
+        className="btn btn-outline"
+        aria-label={locale === 'ar' ? 'Switch to English' : 'التبديل إلى العربية'}
+        title={locale === 'ar' ? 'English' : 'العربية'}
+        onClick={() => setLocale(locale === 'ar' ? 'en' : 'ar')}
+        style={{
+          position: 'absolute',
+          top: 'calc(var(--sp-5) + env(safe-area-inset-top))',
+          insetInlineEnd: 'var(--sp-5)',
+          width: 42,
+          height: 42,
+          padding: 0,
+          borderRadius: '50%',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          zIndex: 10,
+        }}
+      >
+        <Globe size={20} />
+      </button>
+
       <div className="center" style={{ padding: 'var(--sp-7) 0 var(--sp-5)', flexDirection: 'column', gap: 'var(--sp-3)' }}>
         <img src={logoUrl} alt="HabitGo" width={76} height={76} style={{ borderRadius: 20, boxShadow: 'var(--shadow-md)' }} />
-        <h1 className="t-page-title">{t('login_title')}</h1>
+        <h1 className="t-page-title">
+          {t('login_title')}{' '}
+          <img src={waveEmoji} alt="👋" width={34} height={34} style={{ verticalAlign: '-7px' }} />
+        </h1>
         <p className="text-muted t-body">{t('login_subtitle')}</p>
       </div>
 
@@ -61,7 +93,37 @@ export default function Login() {
           />
         </Field>
         <Field label={t('password')}>
-          <Input type="password" autoComplete="current-password" value={password} onChange={(e) => setPassword(e.target.value)} error={!!error} />
+          <div style={{ position: 'relative' }}>
+            <Input
+              type={showPassword ? 'text' : 'password'}
+              autoComplete="current-password"
+              placeholder="••••••••"
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+              error={!!error}
+              style={{ paddingInlineEnd: 48 }}
+            />
+            <button
+              type="button"
+              aria-label={locale === 'ar' ? (showPassword ? 'إخفاء كلمة المرور' : 'إظهار كلمة المرور') : showPassword ? 'Hide password' : 'Show password'}
+              onClick={() => setShowPassword((s) => !s)}
+              style={{
+                position: 'absolute',
+                top: '50%',
+                transform: 'translateY(-50%)',
+                insetInlineEnd: 6,
+                background: 'none',
+                border: 'none',
+                padding: 8,
+                display: 'flex',
+                alignItems: 'center',
+                color: 'var(--text-3)',
+                cursor: 'pointer',
+              }}
+            >
+              {showPassword ? <EyeOff size={20} /> : <Eye size={20} />}
+            </button>
+          </div>
         </Field>
 
         {error && <p className="field-error mb-3">{error}</p>}

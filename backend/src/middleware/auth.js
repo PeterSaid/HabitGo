@@ -1,13 +1,13 @@
 const jwt = require('jsonwebtoken');
 const { config } = require('../config');
-const { db } = require('../db');
+const { prepare } = require('../db');
 const { unauthorized, forbidden } = require('../utils/http');
 
 function signToken(user) {
   return jwt.sign({ sub: user.id, role: user.role }, config.jwtSecret, { expiresIn: config.jwtExpiresIn });
 }
 
-function requireAuth(req, res, next) {
+async function requireAuth(req, res, next) {
   const header = req.headers.authorization || '';
   const token = header.startsWith('Bearer ') ? header.slice(7) : null;
   if (!token) return next(unauthorized());
@@ -17,9 +17,7 @@ function requireAuth(req, res, next) {
   } catch {
     return next(unauthorized('Session expired or invalid', 'token_invalid'));
   }
-  const user = db
-    .prepare('SELECT id, email, phone, role, status FROM users WHERE id = ?')
-    .get(payload.sub);
+  const user = await prepare('SELECT id, email, phone, role, status FROM users WHERE id = ?').get(payload.sub);
   if (!user) return next(unauthorized('Account not found', 'token_invalid'));
   if (user.status !== 'active') return next(forbidden('Account suspended', 'account_suspended'));
   req.user = user;

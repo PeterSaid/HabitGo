@@ -77,6 +77,7 @@ adb install app/build/outputs/apk/debug/app-debug.apk
 ```
 
 - **Emulator:** the app auto-targets `http://10.0.2.2:4000/api/v1` (host machine).
-- **Physical device:** on the login screen expand **API server** and enter
-  `http://<PC-LAN-IP>:4000/api/v1` (same Wi-Fi network; backend running with
-  `npm start`).
+- **Physical device / distribution:** bake the server URL into the build:
+  `set VITE_API_URL=https://<your-host>/api/v1&& npm run build` before `npx cap sync android`
+  (there is no runtime server switch in the UI). For LAN testing against your PC:
+  `set VITE_API_URL=http://<PC-LAN-IP>:4000/api/v1&& npm run build`.

@@ -7,6 +7,7 @@ import { useStore } from '../../state/store';
 import { Badge, Button, Card, EmptyState, ErrorState, ListSkeleton, ProgressBar, SectionHeader } from '../../ui/components';
 import { Donut } from '../../ui/charts';
 import { HabitCard, localToday, type CompleteResult, type TodayHabit } from '../habits/HabitCard';
+import waveEmoji from '../../assets/emoji-wave-3d.png';
 
 type Dashboard = {
   today: { date: string; scheduled: number; completed: number; percent: number; points_earned_today: number };
@@ -85,7 +86,8 @@ export default function Home() {
       <div className="row-between mb-4">
         <div>
           <h1 className="t-section" style={{ color: 'var(--text-2)', fontWeight: 500 }}>
-            {t(greeting as never)}, {user?.name?.split(' ')[0]} 👋
+            {t(greeting as never)}, {user?.name?.split(' ')[0]}{' '}
+            <img src={waveEmoji} alt="👋" width={24} height={24} style={{ verticalAlign: '-5px' }} />
           </h1>
           {level && (
             <span className="t-caption">

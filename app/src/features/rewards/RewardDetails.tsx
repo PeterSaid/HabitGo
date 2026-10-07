@@ -119,7 +119,7 @@ export default function RewardDetails() {
             )}
             {reward.stock !== null && (
               <div className="row-between">
-                <span className="t-label text-muted">{t('availability' as never) || ''}</span>
+                <span className="t-label text-muted">{t('availability')}</span>
                 <span className="t-label tnum">{reward.stock}</span>
               </div>
             )}

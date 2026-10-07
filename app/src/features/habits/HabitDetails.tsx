@@ -41,7 +41,8 @@ export default function HabitDetails() {
     try {
       const [d, month] = await Promise.all([
         api.get<Details>(`/habits/${id}`),
-        api.get<{ logs: LogRow[] }>(`/habits/${id}/logs`),
+        // 3 months of logs so the 90-day heatmap isn't mostly empty
+        api.get<{ logs: LogRow[] }>(`/habits/${id}/logs?months=3`),
       ]);
       setData(d);
       setLogs(month.logs);

@@ -1,13 +1,19 @@
+// Load backend/.env before anything reads process.env (single entry: required by
+// index.js, seed.js, db.js — all of which import this module first).
 require('dotenv').config();
+
 const path = require('path');
-const crypto = require('crypto');
+const fs = require('fs');
 
 const ROOT = path.join(__dirname, '..');
+// Monorepo: the built web app lives at ../app/dist and is served by this API
+const STATIC_DIR = path.resolve(ROOT, '..', 'app', 'dist');
 
 const config = {
   env: process.env.NODE_ENV || 'development',
   port: Number(process.env.PORT || 4000),
   dbFile: process.env.DB_FILE || path.join(ROOT, 'data', 'habitgo.db'),
+  staticDir: fs.existsSync(STATIC_DIR) ? STATIC_DIR : null,
   jwtSecret: process.env.JWT_SECRET || 'dev-only-secret-change-me',
   jwtExpiresIn: process.env.JWT_EXPIRES_IN || '30d',
   corsOrigins: process.env.CORS_ORIGINS || '*',
@@ -27,4 +33,4 @@ const DEFAULT_APP_SETTINGS = {
   app_version: '1.0.0-mvp',
 };
 
-module.exports = { config, DEFAULT_APP_SETTINGS, crypto };
+module.exports = { config, DEFAULT_APP_SETTINGS };

@@ -4,13 +4,15 @@
  *   npm run seed          -> insert categories/achievements/challenges/rewards + demo users (idempotent-ish)
  *   npm run seed:fresh    -> wipe everything, then seed from scratch
  *
+ * Works against the local file DB or a hosted libSQL DB — set DATABASE_URL
+ * and DATABASE_TOKEN env vars to seed the production database.
+ *
  * Demo accounts (documented in README):
  *   peter@habitgo.app  / Peter@12345   (user, 4850 points, 12-day streak, level 3)
  *   admin@habitgo.app  / Admin@12345   (admin)
  */
 const bcrypt = require('bcryptjs');
-const { db, migrate, nowIso } = require('./db');
-const { uuid } = require('./utils/ids');
+const { client, prepare, migrate, nowIso, uuid } = require('./db');
 const { config } = require('./config');
 const { todayIn, addDays, isoWeekday } = require('./utils/dates');
 
@@ -76,7 +78,6 @@ const CHALLENGES = [
 ];
 
 const REWARDS = [
-  // id, category, partner, en name, ar name, en desc, ar desc, cost, stock, type, cash, terms
   ['rw-coffee', 'food', 'demo-cafe', 'Coffee Voucher', 'قسيمة قهوة', 'A free coffee at Demo Café.', 'قهوة مجانية من كافيه ديمو.', 500, 100, 'code', null,
     'Valid for 30 days after redemption.', 'صالحة 30 يومًا بعد الاستبدال.'],
   ['rw-fitness-20', 'fitness', 'demo-fit', '20% Fitness Discount', 'خصم 20% على اللياقة', '20% off a DemoFit Club membership.', 'خصم 20% على عضوية نادي ديمو فيت.', 750, 50, 'code', null,
@@ -89,73 +90,73 @@ const REWARDS = [
     'Paid out after admin review. Demo only.', 'يُدفع بعد مراجعة الإدارة. للتجربة فقط.'],
 ];
 
-function freshWipe() {
+async function freshWipe() {
   const tables = [
     'audit_logs', 'notifications', 'challenge_participants', 'challenges', 'user_achievements', 'achievements',
     'reward_redemptions', 'rewards', 'reward_partners', 'reward_categories', 'points_transactions', 'points_wallets',
     'user_streaks', 'streaks', 'habit_logs', 'habit_schedules', 'habits', 'habit_categories', 'user_settings',
     'profiles', 'devices', 'users', 'app_settings',
   ];
-  for (const t of tables) db.exec(`DELETE FROM ${t};`);
+  await client.batch(tables.map((t) => ({ sql: `DELETE FROM ${t};`, args: [] })), 'write');
 }
 
-function seedStatic() {
+async function seedStatic() {
   const now = nowIso();
-  const insCat = db.prepare('INSERT OR IGNORE INTO habit_categories (id, name_en, name_ar, icon, sort_order, is_active) VALUES (?,?,?,?,?,1)');
-  for (const [id, en, ar, icon, order] of HABIT_CATEGORIES) insCat.run(id, en, ar, icon, order);
+  const insCat = prepare('INSERT OR IGNORE INTO habit_categories (id, name_en, name_ar, icon, sort_order, is_active) VALUES (?,?,?,?,?,1)');
+  for (const [id, en, ar, icon, order] of HABIT_CATEGORIES) await insCat.run(id, en, ar, icon, order);
 
-  const insRCat = db.prepare('INSERT OR IGNORE INTO reward_categories (id, name_en, name_ar, icon, sort_order, is_active) VALUES (?,?,?,?,?,1)');
-  for (const [id, en, ar, icon, order] of REWARD_CATEGORIES) insRCat.run(id, en, ar, icon, order);
+  const insRCat = prepare('INSERT OR IGNORE INTO reward_categories (id, name_en, name_ar, icon, sort_order, is_active) VALUES (?,?,?,?,?,1)');
+  for (const [id, en, ar, icon, order] of REWARD_CATEGORIES) await insRCat.run(id, en, ar, icon, order);
 
-  const insPartner = db.prepare('INSERT OR IGNORE INTO reward_partners (id, name_en, name_ar, is_active) VALUES (?,?,?,1)');
-  for (const [id, en, ar] of PARTNERS) insPartner.run(id, en, ar);
+  const insPartner = prepare('INSERT OR IGNORE INTO reward_partners (id, name_en, name_ar, is_active) VALUES (?,?,?,1)');
+  for (const [id, en, ar] of PARTNERS) await insPartner.run(id, en, ar);
 
-  const insAch = db.prepare(
+  const insAch = prepare(
     `INSERT OR IGNORE INTO achievements (id, name_en, name_ar, description_en, description_ar, icon, points_bonus, xp_bonus, condition_type, condition_meta, threshold, sort_order, is_active)
      VALUES (?,?,?,?,?,?,?,?,?,?,?,?,1)`
   );
-  for (const a of ACHIEVEMENTS) insAch.run(...a);
+  for (const a of ACHIEVEMENTS) await insAch.run(...a);
 
-  const insCh = db.prepare(
+  const insCh = prepare(
     `INSERT OR IGNORE INTO challenges (id, name_en, name_ar, description_en, description_ar, icon, category_id, duration_days, target_days, points_bonus, difficulty, is_active, created_at, updated_at)
      VALUES (?,?,?,?,?,?,?,?,?,?,?,1,?,?)`
   );
-  for (const c of CHALLENGES) insCh.run(...c, now, now);
+  for (const c of CHALLENGES) await insCh.run(...c, now, now);
 
-  const insRw = db.prepare(
+  const insRw = prepare(
     `INSERT OR IGNORE INTO rewards (id, partner_id, category_id, name_en, name_ar, description_en, description_ar,
        image, points_cost, stock, expiry_date, terms_en, terms_ar, redemption_type, cash_amount, is_active, sort_order, created_at, updated_at)
      VALUES (?, ?, ?, ?, ?, ?, ?, NULL, ?, ?, NULL, ?, ?, ?, ?, 1, ?, ?, ?)`
   );
-  REWARDS.forEach((r, i) => {
-    const [id, cat, partner, en, ar, dEn, dAr, cost, stock, type, cash, termsEn, termsAr] = r;
-    insRw.run(id, partner, cat, en, ar, dEn, dAr, cost, stock, termsEn, termsAr, type, cash, i + 1, now, now);
-  });
+  for (let i = 0; i < REWARDS.length; i++) {
+    const [id, cat, partner, en, ar, dEn, dAr, cost, stock, type, cash, termsEn, termsAr] = REWARDS[i];
+    await insRw.run(id, partner, cat, en, ar, dEn, dAr, cost, stock, termsEn, termsAr, type, cash, i + 1, now, now);
+  }
 }
 
-function upsertUser({ id, email, password, name, role = 'user', country = 'Egypt', city = 'Cairo', tz = TZ, locale = 'ar', theme = 'system', xp = 0, interests = [], onboarded = true }) {
+async function upsertUser({ id, email, password, name, role = 'user', country = 'Egypt', city = 'Cairo', tz = TZ, locale = 'ar', theme = 'system', xp = 0, interests = [], onboarded = true }) {
   const now = nowIso();
-  db.prepare(
+  await prepare(
     `INSERT INTO users (id, email, password_hash, role, status, country, city, created_at, updated_at)
      VALUES (?, ?, ?, ?, 'active', ?, ?, ?, ?)
      ON CONFLICT(id) DO NOTHING`
   ).run(id, email, bcrypt.hashSync(password, 10), role, country, city, now, now);
-  db.prepare(
+  await prepare(
     `INSERT INTO profiles (user_id, name, timezone, xp, interests, onboarded, created_at, updated_at)
      VALUES (?, ?, ?, ?, ?, ?, ?, ?)
      ON CONFLICT(user_id) DO UPDATE SET name = excluded.name, timezone = excluded.timezone, xp = excluded.xp, interests = excluded.interests, onboarded = excluded.onboarded`
   ).run(id, name, tz, xp, JSON.stringify(interests), onboarded ? 1 : 0, now, now);
-  db.prepare(
+  await prepare(
     `INSERT INTO user_settings (user_id, locale, theme, updated_at) VALUES (?, ?, ?, ?)
      ON CONFLICT(user_id) DO UPDATE SET locale = excluded.locale, theme = excluded.theme`
   ).run(id, locale, theme, now);
-  db.prepare('INSERT OR IGNORE INTO points_wallets (user_id, updated_at) VALUES (?, ?)').run(id, now);
-  db.prepare('INSERT OR IGNORE INTO user_streaks (user_id, updated_at) VALUES (?, ?)').run(id, now);
+  await prepare('INSERT OR IGNORE INTO points_wallets (user_id, updated_at) VALUES (?, ?)').run(id, now);
+  await prepare('INSERT OR IGNORE INTO user_streaks (user_id, updated_at) VALUES (?, ?)').run(id, now);
 }
 
-function seedPeter() {
+async function seedPeter() {
   const pid = 'user-peter';
-  upsertUser({
+  await upsertUser({
     id: pid,
     email: 'peter@habitgo.app',
     password: config.seedPasswords.user,
@@ -176,18 +177,18 @@ function seedPeter() {
   const now = nowIso();
   const start = addDays(today, -34);
   for (const h of habits) {
-    db.prepare(
+    await prepare(
       `INSERT OR IGNORE INTO habits (id, user_id, name, description, category_id, icon, color, type, goal_value, goal_unit,
          difficulty, points, start_date, end_date, is_paused, is_deleted, created_at, updated_at)
        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, NULL, 0, 0, ?, ?)`
     ).run(h.id, pid, h.name, h.ar, h.cat, h.icon, h.color, h.type, h.goal, h.unit, h.diff, h.points, start, now, now);
-    db.prepare(
+    await prepare(
       `INSERT OR IGNORE INTO habit_schedules (id, habit_id, freq_type, days_of_week, times_per_week, times_per_month, reminder_time, reminder_days, reminder_message, created_at)
        VALUES (?, ?, ?, ?, NULL, NULL, ?, ?, ?, ?)`
     ).run(
       `sch-${h.id}`, h.id, h.freq,
       h.days ? h.days.join(',') : null,
-      h.reminder, h.reminder, null, now
+      h.reminder, null, null, now
     );
   }
 
@@ -199,11 +200,11 @@ function seedPeter() {
     return seedNum / 2147483648;
   };
 
-  const insLog = db.prepare(
+  const insLog = prepare(
     `INSERT OR IGNORE INTO habit_logs (id, habit_id, user_id, date, target, completed_value, status, points_earned, created_at, updated_at)
      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`
   );
-  const insTx = db.prepare(
+  const insTx = prepare(
     `INSERT OR IGNORE INTO points_transactions (id, user_id, type, source_type, source_id, points, status, description, created_at)
      VALUES (?, ?, ?, ?, ?, ?, 'completed', ?, ?)`
   );
@@ -223,8 +224,8 @@ function seedPeter() {
       if (value === 0) continue;
       const earned = Math.round((h.points * value) / h.goal);
       const ts = `${d}T${h.reminder || '20:00'}:00.000Z`;
-      insLog.run(uuid(), h.id, pid, d, h.goal, value, value >= h.goal ? 'completed' : 'partial', earned, ts, ts);
-      insTx.run(uuid(), pid, 'earn', 'habit_log', null, earned, `${h.name} (${d})`, ts);
+      await insLog.run(uuid(), h.id, pid, d, h.goal, value, value >= h.goal ? 'completed' : 'partial', earned, ts, ts);
+      await insTx.run(uuid(), pid, 'earn', 'habit_log', null, earned, `${h.name} (${d})`, ts);
       lifetime += earned;
     }
   }
@@ -232,39 +233,39 @@ function seedPeter() {
   // ---- Streaks: 12-day user streak ending today (spec section 72) ----
   for (let i = 11; i >= 0; i--) {
     const d = addDays(today, -i);
-    const any = db.prepare("SELECT COUNT(*) AS n FROM habit_logs WHERE user_id = ? AND date = ?").get(pid, d).n;
+    const any = (await prepare('SELECT COUNT(*) AS n FROM habit_logs WHERE user_id = ? AND date = ?').get(pid, d)).n;
     if (any === 0) {
       // keep the chain: log a sleep completion on that day
       const h = habits.find((x) => x.id === 'hb-sleep');
       const earned = h.points;
       const ts = `${d}T22:00:00.000Z`;
-      insLog.run(uuid(), h.id, pid, d, 1, 1, 'completed', earned, ts, ts);
-      insTx.run(uuid(), pid, 'earn', 'habit_log', null, earned, `${h.name} (${d})`, ts);
+      await insLog.run(uuid(), h.id, pid, d, 1, 1, 'completed', earned, ts, ts);
+      await insTx.run(uuid(), pid, 'earn', 'habit_log', null, earned, `${h.name} (${d})`, ts);
       lifetime += earned;
     }
   }
   const usBest = 18;
-  db.prepare(
+  await prepare(
     `UPDATE user_streaks SET current_streak = 12, best_streak = ?, perfect_day_streak = 5, best_perfect_day = 6,
        last_active_date = ?, last_perfect_date = ?, updated_at = ? WHERE user_id = ?`
   ).run(usBest, today, addDays(today, -1), now, pid);
 
   for (const h of habits) {
-    const done = db.prepare("SELECT MAX(date) AS d FROM habit_logs WHERE habit_id = ? AND status='completed'").get(h.id);
+    const done = await prepare("SELECT MAX(date) AS d FROM habit_logs WHERE habit_id = ? AND status='completed'").get(h.id);
     let current = 0;
     if (done && done.d) {
       let cursor = done.d;
       for (;;) {
         const sched = h.freq === 'daily' || (h.days && h.days.includes(isoWeekday(cursor)));
         if (!sched) { cursor = addDays(cursor, -1); continue; }
-        const ok = db.prepare("SELECT 1 FROM habit_logs WHERE habit_id = ? AND date = ? AND status='completed'").get(h.id, cursor);
+        const ok = await prepare("SELECT 1 AS ok FROM habit_logs WHERE habit_id = ? AND date = ? AND status='completed'").get(h.id, cursor);
         if (!ok) break;
         current += 1;
         cursor = addDays(cursor, -1);
         if (current > 40) break;
       }
     }
-    db.prepare(
+    await prepare(
       `INSERT OR IGNORE INTO streaks (id, habit_id, user_id, current_streak, best_streak, last_completed_date, updated_at)
        VALUES (?, ?, ?, ?, ?, ?, ?)`
     ).run(`stk-${h.id}`, h.id, pid, current, Math.max(current + 6, usBest), done ? done.d : null, now);
@@ -273,49 +274,49 @@ function seedPeter() {
   // ---- Wallet: land exactly on 4850 (spec section 72) ----
   const adjustment = 4850 - lifetime;
   if (adjustment !== 0) {
-    insTx.run(uuid(), pid, 'bonus', 'admin', null, adjustment, 'Welcome bonus & referrals', `${start}T10:00:00.000Z`);
+    await insTx.run(uuid(), pid, 'bonus', 'admin', null, adjustment, 'Welcome bonus & referrals', `${start}T10:00:00.000Z`);
   }
   const bonus50 = 50;
-  insTx.run(uuid(), pid, 'bonus', 'streak_bonus', null, bonus50, '7-day streak bonus', `${addDays(today, -5)}T21:00:00.000Z`);
+  await insTx.run(uuid(), pid, 'bonus', 'streak_bonus', null, bonus50, '7-day streak bonus', `${addDays(today, -5)}T21:00:00.000Z`);
   const total = 4850;
-  db.prepare(
+  await prepare(
     'UPDATE points_wallets SET available = ?, pending = 0, lifetime = ?, redeemed = 150, updated_at = ? WHERE user_id = ?'
   ).run(total - 150, total + bonus50, now, pid);
 
   // ---- A completed redemption so history looks real ----
-  db.prepare(
+  await prepare(
     `INSERT OR IGNORE INTO reward_redemptions (id, user_id, reward_id, points_cost, status, redemption_code, requested_at, approved_at, completed_at)
      VALUES ('red-demo-1', ?, 'rw-coffee', 500, 'completed', 'HG-RW1-A7X3K9', ?, ?, ?)`
   ).run(pid, addDays(today, -20), addDays(today, -20), addDays(today, -20));
 
   // ---- Achievements snapshot ----
   const achOwned = ['first_habit', 'first_week', 'streak_7', 'habits_100'];
-  achOwned.forEach((aid, i) => {
-    db.prepare(
+  for (let i = 0; i < achOwned.length; i++) {
+    await prepare(
       'INSERT OR IGNORE INTO user_achievements (id, user_id, achievement_id, points_awarded, achieved_at) VALUES (?, ?, ?, 0, ?)'
-    ).run(uuid(), pid, aid, addDays(today, -(25 - i * 3)));
-  });
+    ).run(uuid(), pid, achOwned[i], addDays(today, -(25 - i * 3)));
+  }
 
   // ---- Challenge participation ----
-  db.prepare(
+  await prepare(
     `INSERT OR IGNORE INTO challenge_participants (id, challenge_id, user_id, progress_days, status, joined_at)
      VALUES (?, 'ch-water-7', ?, 5, 'active', ?)`
   ).run(uuid(), pid, addDays(today, -5));
-  db.prepare(
+  await prepare(
     `INSERT OR IGNORE INTO challenge_participants (id, challenge_id, user_id, progress_days, status, joined_at, completed_at)
      VALUES (?, 'ch-reading-7', ?, 7, 'completed', ?, ?)`
   ).run(uuid(), pid, addDays(today, -14), addDays(today, -7));
 
   // ---- Notifications ----
   const { notify } = require('./services/notifications');
-  notify(pid, 'bonus', '🔥 7-day streak bonus!', '🔥 مكافأة استمرارية 7 أيام!', 'You earned +50 bonus points.', 'حصلت على +50 نقطة إضافية.', null);
-  notify(pid, 'reward', 'Reward redeemed 🎁', 'تم استبدال المكافأة 🎁', 'Your Coffee Voucher code: HG-RW1-A7X3K9', 'كود قسيمة القهوة الخاص بك: HG-RW1-A7X3K9', null);
-  notify(pid, 'challenge', 'Challenge joined: Drink Water Challenge', 'تم الانضمام للتحدي: تحدي شرب المياه', 'Complete 7 days to earn 120 bonus points.', 'أكمل 7 أيام للحصول على 120 نقطة إضافية.', null);
-  notify(pid, 'system', 'Welcome to HabitGo 👋', 'مرحبًا بك في HabitGo 👋', 'Build better habits. Earn real rewards.', 'كوّن عادات أفضل. واكسب مكافآت حقيقية.', null);
+  await notify(pid, 'bonus', '🔥 7-day streak bonus!', '🔥 مكافأة استمرارية 7 أيام!', 'You earned +50 bonus points.', 'حصلت على +50 نقطة إضافية.', null);
+  await notify(pid, 'reward', 'Reward redeemed 🎁', 'تم استبدال المكافأة 🎁', 'Your Coffee Voucher code: HG-RW1-A7X3K9', 'كود قسيمة القهوة الخاص بك: HG-RW1-A7X3K9', null);
+  await notify(pid, 'challenge', 'Challenge joined: Drink Water Challenge', 'تم الانضمام للتحدي: تحدي شرب المياه', 'Complete 7 days to earn 120 bonus points.', 'أكمل 7 أيام للحصول على 120 نقطة إضافية.', null);
+  await notify(pid, 'system', 'Welcome to HabitGo 👋', 'مرحبًا بك في HabitGo 👋', 'Build better habits. Earn real rewards.', 'كوّن عادات أفضل. واكسب مكافآت حقيقية.', null);
 }
 
-function seedAdmin() {
-  upsertUser({
+async function seedAdmin() {
+  await upsertUser({
     id: 'user-admin',
     email: 'admin@habitgo.app',
     password: config.seedPasswords.admin,
@@ -328,25 +329,29 @@ function seedAdmin() {
   });
 }
 
-function run({ fresh = false } = {}) {
-  migrate();
+async function run({ fresh = false } = {}) {
+  await migrate();
   if (fresh) {
-    freshWipe();
+    await freshWipe();
     console.log('• wiped existing data');
   }
-  seedStatic();
-  seedAdmin();
-  const existing = db.prepare('SELECT COUNT(*) AS n FROM habits WHERE user_id = ?').get('user-peter').n;
+  await seedStatic();
+  await seedAdmin();
+  const existing = (await prepare('SELECT COUNT(*) AS n FROM habits WHERE user_id = ?').get('user-peter')).n;
   if (existing === 0) {
-    seedPeter();
+    await seedPeter();
     console.log('• seeded demo user Peter (peter@habitgo.app)');
   } else {
     console.log('• demo user Peter already present — history not regenerated (use seed:fresh to reset)');
   }
-  const users = db.prepare('SELECT COUNT(*) AS n FROM users').get().n;
-  const rewards = db.prepare('SELECT COUNT(*) AS n FROM rewards').get().n;
+  const users = (await prepare('SELECT COUNT(*) AS n FROM users').get()).n;
+  const rewards = (await prepare('SELECT COUNT(*) AS n FROM rewards').get()).n;
   console.log(`✓ seed complete: ${users} users, ${rewards} rewards, ${ACHIEVEMENTS.length} achievements, ${CHALLENGES.length} challenges`);
+  client.close();
 }
 
 const fresh = process.argv.includes('--fresh');
-run({ fresh });
+run({ fresh }).catch((e) => {
+  console.error(e);
+  process.exit(1);
+});

@@ -1,13 +1,12 @@
 const express = require('express');
 const { z } = require('zod');
-const { db, nowIso, uuid } = require('../db');
+const { prepare, nowIso, uuid } = require('../db');
 const { asyncHandler, validate, notFound, badRequest } = require('../utils/http');
 const { requireAuth } = require('../middleware/auth');
 const pointsService = require('../services/points');
-const streaksService = require('../services/streaks');
 const statsService = require('../services/stats');
 const { getUserTz } = require('../services/stats');
-const { todayIn, monthRange, eachDay, isValidDateStr } = require('../utils/dates');
+const { todayIn, monthRange, isValidDateStr } = require('../utils/dates');
 
 const router = express.Router();
 router.use(requireAuth);
@@ -65,15 +64,13 @@ function serializeHabit(h) {
   };
 }
 
-function loadHabit(userId, habitId) {
-  const h = db
-    .prepare(
-      `SELECT h.*, s.freq_type, s.days_of_week, s.times_per_week, s.times_per_month,
-              s.reminder_time, s.reminder_days, s.reminder_message
-       FROM habits h JOIN habit_schedules s ON s.habit_id = h.id
-       WHERE h.id = ? AND h.user_id = ? AND h.is_deleted = 0`
-    )
-    .get(habitId, userId);
+async function loadHabit(userId, habitId) {
+  const h = await prepare(
+    `SELECT h.*, s.freq_type, s.days_of_week, s.times_per_week, s.times_per_month,
+            s.reminder_time, s.reminder_days, s.reminder_message
+     FROM habits h JOIN habit_schedules s ON s.habit_id = h.id
+     WHERE h.id = ? AND h.user_id = ? AND h.is_deleted = 0`
+  ).get(habitId, userId);
   if (!h) throw notFound('Habit not found');
   return h;
 }
@@ -81,19 +78,17 @@ function loadHabit(userId, habitId) {
 router.get(
   '/',
   asyncHandler(async (req, res) => {
-    const rows = db
-      .prepare(
-        `SELECT h.*, s.freq_type, s.days_of_week, s.times_per_week, s.times_per_month,
-                s.reminder_time, s.reminder_days, s.reminder_message
-         FROM habits h JOIN habit_schedules s ON s.habit_id = h.id
-         WHERE h.user_id = ? AND h.is_deleted = 0
-         ORDER BY h.created_at ASC`
-      )
-      .all(req.user.id);
-    const withStreaks = rows.map((h) => {
-      const s = db.prepare('SELECT current_streak, best_streak FROM streaks WHERE habit_id = ?').get(h.id);
+    const rows = await prepare(
+      `SELECT h.*, s.freq_type, s.days_of_week, s.times_per_week, s.times_per_month,
+              s.reminder_time, s.reminder_days, s.reminder_message
+       FROM habits h JOIN habit_schedules s ON s.habit_id = h.id
+       WHERE h.user_id = ? AND h.is_deleted = 0
+       ORDER BY h.created_at ASC`
+    ).all(req.user.id);
+    const withStreaks = await Promise.all(rows.map(async (h) => {
+      const s = await prepare('SELECT current_streak, best_streak FROM streaks WHERE habit_id = ?').get(h.id);
       return { ...serializeHabit(h), streak: s ? s.current_streak : 0, best_streak: s ? s.best_streak : 0 };
-    });
+    }));
     res.json({ habits: withStreaks });
   })
 );
@@ -101,8 +96,8 @@ router.get(
 router.get(
   '/today',
   asyncHandler(async (req, res) => {
-    const items = statsService.todayList(req.user.id);
-    res.json({ date: todayIn(getUserTz(req.user.id)), habits: items });
+    const items = await statsService.todayList(req.user.id);
+    res.json({ date: await todayIn(await getUserTz(req.user.id)), habits: items });
   })
 );
 
@@ -125,10 +120,10 @@ router.post(
 
     const id = uuid();
     const now = nowIso();
-    const startDate = data.start_date || todayIn(getUserTz(req.user.id));
+    const startDate = data.start_date || (await todayIn(await getUserTz(req.user.id)));
     const points = data.points || DEFAULT_POINTS[data.difficulty];
 
-    db.prepare(
+    await prepare(
       `INSERT INTO habits (id, user_id, name, description, category_id, icon, color, type, goal_value, goal_unit,
                            difficulty, points, start_date, end_date, is_paused, is_deleted, created_at, updated_at)
        VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,0,0,?,?)`
@@ -137,7 +132,7 @@ router.post(
       data.type, data.type === 'quantitative' ? data.goal_value : null, data.goal_unit || null,
       data.difficulty, points, startDate, data.end_date || null, now, now
     );
-    db.prepare(
+    await prepare(
       `INSERT INTO habit_schedules (id, habit_id, freq_type, days_of_week, times_per_week, times_per_month,
                                     reminder_time, reminder_days, reminder_message, created_at)
        VALUES (?,?,?,?,?,?,?,?,?,?)`
@@ -149,7 +144,7 @@ router.post(
       data.reminder_days ? data.reminder_days.join(',') : null,
       data.reminder_message || null, now
     );
-    const habit = loadHabit(req.user.id, id);
+    const habit = await loadHabit(req.user.id, id);
     res.status(201).json({ habit: serializeHabit(habit) });
   })
 );
@@ -157,16 +152,14 @@ router.post(
 router.get(
   '/:id',
   asyncHandler(async (req, res) => {
-    const habit = loadHabit(req.user.id, req.params.id);
-    const streak = db.prepare('SELECT * FROM streaks WHERE habit_id = ?').get(habit.id) || { current_streak: 0, best_streak: 0 };
-    const totals = db
-      .prepare(
-        `SELECT COUNT(*) AS scheduled,
-                SUM(CASE WHEN status='completed' THEN 1 ELSE 0 END) AS completed,
-                COALESCE(SUM(points_earned), 0) AS points
-         FROM habit_logs WHERE habit_id = ?`
-      )
-      .get(habit.id);
+    const habit = await loadHabit(req.user.id, req.params.id);
+    const streak = (await prepare('SELECT * FROM streaks WHERE habit_id = ?').get(habit.id)) || { current_streak: 0, best_streak: 0 };
+    const totals = await prepare(
+      `SELECT COUNT(*) AS scheduled,
+              SUM(CASE WHEN status='completed' THEN 1 ELSE 0 END) AS completed,
+              COALESCE(SUM(points_earned), 0) AS points
+       FROM habit_logs WHERE habit_id = ?`
+    ).get(habit.id);
     const rate = totals.scheduled ? Math.round((totals.completed / totals.scheduled) * 100) : 0;
     res.json({ habit: serializeHabit(habit), streak, totals, completion_rate: rate });
   })
@@ -175,11 +168,11 @@ router.get(
 router.put(
   '/:id',
   asyncHandler(async (req, res) => {
-    const habit = loadHabit(req.user.id, req.params.id);
+    const habit = await loadHabit(req.user.id, req.params.id);
     const data = validate(habitSchema.partial(), req.body);
     const now = nowIso();
     const p = data;
-    db.prepare(
+    await prepare(
       `UPDATE habits SET name = COALESCE(?, name), description = ?, category_id = ?, icon = COALESCE(?, icon),
          color = COALESCE(?, color), type = COALESCE(?, type), goal_value = ?, goal_unit = ?,
          difficulty = COALESCE(?, difficulty), points = COALESCE(?, points), start_date = COALESCE(?, start_date),
@@ -205,7 +198,7 @@ router.put(
     if (p.reminder_days) sched.reminder_days = p.reminder_days.join(',');
     if (p.reminder_message !== undefined) sched.reminder_message = p.reminder_message;
     if (Object.keys(sched).length) {
-      db.prepare(
+      await prepare(
         `UPDATE habit_schedules SET freq_type = COALESCE(?, freq_type), days_of_week = ?, times_per_week = ?,
            times_per_month = ?, reminder_time = ?, reminder_days = ?, reminder_message = ? WHERE habit_id = ?`
       ).run(
@@ -217,7 +210,7 @@ router.put(
         habit.id
       );
     }
-    res.json({ habit: serializeHabit(loadHabit(req.user.id, habit.id)) });
+    res.json({ habit: serializeHabit(await loadHabit(req.user.id, habit.id)) });
   })
 );
 
@@ -225,9 +218,9 @@ router.put(
 router.delete(
   '/:id',
   asyncHandler(async (req, res) => {
-    const habit = loadHabit(req.user.id, req.params.id);
-    db.prepare('UPDATE habits SET is_deleted = 1, updated_at = ? WHERE id = ?').run(nowIso(), habit.id);
-    db.prepare('DELETE FROM streaks WHERE habit_id = ?').run(habit.id);
+    const habit = await loadHabit(req.user.id, req.params.id);
+    await prepare('UPDATE habits SET is_deleted = 1, updated_at = ? WHERE id = ?').run(nowIso(), habit.id);
+    await prepare('DELETE FROM streaks WHERE habit_id = ?').run(habit.id);
     res.json({ ok: true });
   })
 );
@@ -235,9 +228,9 @@ router.delete(
 router.post(
   '/:id/pause',
   asyncHandler(async (req, res) => {
-    const habit = loadHabit(req.user.id, req.params.id);
+    const habit = await loadHabit(req.user.id, req.params.id);
     const pause = req.body && req.body.paused === false ? 0 : 1;
-    db.prepare('UPDATE habits SET is_paused = ?, updated_at = ? WHERE id = ?').run(pause, nowIso(), habit.id);
+    await prepare('UPDATE habits SET is_paused = ?, updated_at = ? WHERE id = ?').run(pause, nowIso(), habit.id);
     res.json({ ok: true, is_paused: !!pause });
   })
 );
@@ -247,11 +240,11 @@ router.post(
   '/:id/complete',
   asyncHandler(async (req, res) => {
     const { date, value } = req.body || {};
-    const tz = getUserTz(req.user.id);
-    const result = pointsService.completeHabit({
+    const tz = await getUserTz(req.user.id);
+    const result = await pointsService.completeHabit({
       user: { id: req.user.id },
       habitId: req.params.id,
-      date: date || todayIn(tz),
+      date: date || (await todayIn(tz)),
       value,
     });
     res.json(result);
@@ -262,27 +255,39 @@ router.post(
   '/:id/uncomplete',
   asyncHandler(async (req, res) => {
     const { date } = req.body || {};
-    const tz = getUserTz(req.user.id);
-    const result = pointsService.uncompleteHabit({
+    const tz = await getUserTz(req.user.id);
+    const result = await pointsService.uncompleteHabit({
       user: { id: req.user.id },
       habitId: req.params.id,
-      date: date || todayIn(tz),
+      date: date || (await todayIn(tz)),
     });
     res.json(result);
   })
 );
 
-/** History logs for one habit within a month (calendar + history list). */
+/** History logs for one habit within a month (calendar + history list),
+ *  or the last N months when ?months=N (1-12) is given (e.g. 90-day heatmap). */
 router.get(
   '/:id/logs',
   asyncHandler(async (req, res) => {
-    const habit = loadHabit(req.user.id, req.params.id);
-    const ym = req.query.month && /^\d{4}-\d{2}$/.test(req.query.month) ? req.query.month : todayIn(getUserTz(req.user.id)).slice(0, 7);
-    const [from, to] = monthRange(ym);
-    const logs = db
-      .prepare('SELECT * FROM habit_logs WHERE habit_id = ? AND date BETWEEN ? AND ? ORDER BY date DESC')
-      .all(habit.id, from, to);
-    res.json({ month: ym, logs });
+    const habit = await loadHabit(req.user.id, req.params.id);
+    const today = await todayIn(await getUserTz(req.user.id));
+    const months = Number(req.query.months);
+    let from, to, ym;
+    if (Number.isInteger(months) && months >= 1 && months <= 12) {
+      to = today;
+      const [y, m] = today.split('-').map(Number);
+      const start = new Date(y, m - 1 - (months - 1), 1);
+      from = `${start.getFullYear()}-${String(start.getMonth() + 1).padStart(2, '0')}-01`;
+      ym = today.slice(0, 7);
+    } else {
+      ym = req.query.month && /^\d{4}-\d{2}$/.test(req.query.month) ? req.query.month : today.slice(0, 7);
+      [from, to] = monthRange(ym);
+    }
+    const logs = await prepare(
+      'SELECT * FROM habit_logs WHERE habit_id = ? AND date BETWEEN ? AND ? ORDER BY date DESC'
+    ).all(habit.id, from, to);
+    res.json({ month: ym, from, to, logs });
   })
 );
 
@@ -291,7 +296,7 @@ router.get(
   '/calendar/:month',
   asyncHandler(async (req, res) => {
     if (!/^\d{4}-\d{2}$/.test(req.params.month)) throw badRequest('month must be YYYY-MM');
-    res.json({ month: req.params.month, days: statsService.calendarMonth(req.user.id, req.params.month) });
+    res.json({ month: req.params.month, days: await statsService.calendarMonth(req.user.id, req.params.month) });
   })
 );
 

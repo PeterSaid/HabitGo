@@ -1,4 +1,5 @@
 const express = require('express');
+const path = require('path');
 const cors = require('cors');
 const { config } = require('./config');
 const { migrate } = require('./db');
@@ -15,8 +16,6 @@ const engagementRouter = require('./routes/engagement');
 const adminRouter = require('./routes/admin');
 
 function buildApp() {
-  migrate();
-
   const app = express();
   app.use(express.json({ limit: '1mb' }));
   app.use(cors({ origin: config.corsOrigins === '*' ? true : config.corsOrigins.split(',') }));
@@ -32,9 +31,17 @@ function buildApp() {
   app.use('/api/v1', engagementRouter);
   app.use('/api/v1/admin', adminRouter);
 
+  // Serve the built web app (single origin: app + API on the same URL)
+  if (config.staticDir) {
+    app.use(express.static(config.staticDir));
+    app.get(/^\/(?!api\/).*/, (req, res) => {
+      res.sendFile(path.join(config.staticDir, 'index.html'));
+    });
+  }
+
   app.use((req, res) => res.status(404).json({ error: { code: 'not_found', message: 'Not found' } }));
   app.use(errorHandler);
   return app;
 }
 
-module.exports = { buildApp };
+module.exports = { buildApp, migrate };

@@ -1,0 +1,37 @@
+# Render Blueprint — deploys HabitGo (backend + built web app) as ONE service.
+# The backend serves the web app from ../app/dist (single origin, no CORS issues).
+# Prereq: a Turso database — full Arabic walkthrough in docs/DEPLOY-AR.md.
+services:
+  - type: web
+    name: habitgo
+    runtime: node
+    plan: free
+    rootDir: backend
+    buildCommand: npm ci && cd ../app && npm ci && npm run build
+    startCommand: npm start
+    healthCheckPath: /api/health
+    envVars:
+      - key: NODE_VERSION
+        value: 22.14.0
+      - key: NODE_ENV
+        value: production
+      # Turso hosted database (required) — Dashboard → habitgo → .env copy
+      - key: DATABASE_URL
+        sync: false
+      - key: DATABASE_TOKEN
+        sync: false
+      - key: JWT_SECRET
+        generateValue: true
+      - key: CORS_ORIGINS
+        value: '*'
+      # Optional SMTP for real OTP emails (leave empty = demo mode shows OTP in-app)
+      - key: SMTP_HOST
+        sync: false
+      - key: SMTP_PORT
+        value: '465'
+      - key: SMTP_USER
+        sync: false
+      - key: SMTP_PASS
+        sync: false
+      - key: MAIL_FROM
+        sync: false

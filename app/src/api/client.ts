@@ -20,7 +20,6 @@ export function setServerUrl(url: string | null) {
   else localStorage.removeItem(SERVER_KEY);
 }
 
-const BASE = getServerUrl();
 const TOKEN_KEY = 'habitgo.token';
 
 export class ApiError extends Error {
@@ -51,7 +50,7 @@ async function request<T>(path: string, options: RequestInit = {}): Promise<T> {
 
   let res: Response;
   try {
-    res = await fetch(`${BASE}${path}`, { ...options, headers });
+    res = await fetch(`${getServerUrl()}${path}`, { ...options, headers });
   } catch {
     throw new ApiError(0, 'network_error', 'network');
   }
