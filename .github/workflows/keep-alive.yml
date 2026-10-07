@@ -1,0 +1,19 @@
+# Keeps the free Render instance awake by pinging the health endpoint.
+# Without this, Render spins the service down after 15 minutes of inactivity
+# and users see a "service waking up" interstitial on the next request.
+name: Keep Render warm
+
+on:
+  schedule:
+    - cron: "*/10 * * * *" # every 10 minutes (< the 15-minute idle window)
+  workflow_dispatch:
+
+jobs:
+  ping:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Ping HabitGo API
+        run: |
+          code=$(curl -sS -o /dev/null -w "%{http_code}" --max-time 60 https://habitgo-rc6a.onrender.com/api/health)
+          echo "health returned $code"
+          test "$code" = "200"
