@@ -4,11 +4,12 @@ const config: CapacitorConfig = {
   appId: 'com.habitgo.app',
   appName: 'HabitGo',
   webDir: 'dist',
-  // Point the native app at a hosted API (or LAN IP) instead of the emulator loopback.
-  // For local testing with an Android emulator the backend runs on your machine:
-  //   10.0.2.2 is the emulator's alias for the host's localhost.
+  // Live-shell mode: the app always loads the deployed web app from Render,
+  // so UI updates reach installed APKs instantly on next open (no re-download).
+  // Trade-off: the app needs internet to open (no offline mode).
   server: {
     androidScheme: 'https',
+    url: 'https://habitgo-rc6a.onrender.com',
   },
   plugins: {
     LocalNotifications: {
