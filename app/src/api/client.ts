@@ -11,7 +11,15 @@ export function getServerUrl(): string {
   const saved = localStorage.getItem(SERVER_KEY);
   if (saved) return saved.replace(/\/+$/, '');
   if (import.meta.env.VITE_API_URL) return import.meta.env.VITE_API_URL;
-  if (Capacitor.isNativePlatform()) return 'http://10.0.2.2:4000/api/v1'; // emulator -> host machine
+  if (Capacitor.isNativePlatform()) {
+    // Live-shell APK: the webview loads the deployed site, so the API is
+    // same-origin. Fall back to the emulator alias only on local dev origins.
+    const origin = window.location.origin;
+    if (/^https?:\/\//.test(origin) && !/localhost|127\.0\.0\.1/.test(origin)) {
+      return `${origin}/api/v1`;
+    }
+    return 'http://10.0.2.2:4000/api/v1'; // Android emulator → host machine
+  }
   return '/api/v1';
 }
 
