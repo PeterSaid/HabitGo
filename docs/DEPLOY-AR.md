@@ -78,8 +78,41 @@ Remove-Item Env:DATABASE_URL, Env:DATABASE_TOKEN
 > ملحوظة عن الخطة المجانية في Render: السيرفر بي "ينام" بعد 15 دقيقة من عدم الاستخدام،
 > وأول طلب بعدها ياخد حوالي 30–60 ثانية يصحى. لو عايز سرعة دايمًا: ارفّع الخطة لـ Starter.
 
-> ملحوظة: نفس الرابط ده هو (تطبيق ويب + API) — يعني تقدر تكتبه في `VITE_API_URL` وقت بناء
-> الـ APK، أو تستخدم خانة "خادم الـ API" الجديدة في شاشة تسجيل الدخول (الخطوة 4).
+---
+
+## بديل بدون فيزا — النشر على Hugging Face Spaces
+
+لو Render طلب منك فيزا (بيحصل مع حسابات جديدة كتحقق)، في حل مجاني 100% بدون أي كارت:
+**Hugging Face Spaces** بشعار Docker (ملف `Dockerfile` جاهز في المشروع). البيانات على Turso
+زي ما هي، والتطبيق + الـ API على نفس اللينك.
+
+> ملحوظتين قبل ما تختار: (1) السبيس على HF بيبقى **عام** — يعني كود التطبيق يبقى معروض،
+> (2) بيسيب بعد 48 ساعة من عدم الاستخدام ويصحى في أقل من دقيقة (أحسن من راندر).
+
+الخطوات:
+
+1. سجّل على <https://huggingface.co> (تقدر بحساب Google) — مجاني بدون كارت.
+2. New → **Space** → الاسم `habitgo` → SDK: **Docker** → Blank → **Public** → Create.
+3. من إعدادات السبيس: Settings → **Variables and secrets** → ضيف:
+   - `DATABASE_URL` = رابط Turso بتاعك
+   - `DATABASE_TOKEN` = توكن Turso
+   - `JWT_SECRET` = أي نص عشوائي طويل
+4. اربط الكود بالسبيس (مرة واحدة): Settings → Access Tokens → اعمل توكن **Write**.
+   وبعدين من مجلد المشروع:
+   ```powershell
+   git remote add hf https://<username>:<hf-token>@huggingface.co/spaces/<username>/habitgo
+   git push hf main
+   ```
+5. استنى البناء (5 دقايق تقريبًا) → تطبيقك هيبقى على
+   `https://<username>-habitgo.hf.space`
+6. حمّل الجداول على Turso (الخطوة 2 فوق لو لسه) وجرّب تسجيل دخول.
+7. بناء APK النهائي:
+   `set VITE_API_URL=https://<username>-habitgo.hf.space/api/v1&& npm run build`
+   ثم `npx cap sync android` و `gradlew assembleRelease`.
+
+أي تعديل بعدين = `git push hf main` → السبيس يعيد البناء لوحده → يوصل للكل.
+
+---
 
 ---
 
