@@ -31,6 +31,7 @@ export const ar: Record<TranslationKey, string> = {
   nav_rewards: 'المكافآت',
   nav_profile: 'حسابي',
   nav_add: 'إضافة عادة',
+  nav_add_short: 'إضافة',
 
   // Splash / Onboarding
   onboarding_1_title: 'ابنِ عادات أفضل',

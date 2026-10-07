@@ -29,6 +29,7 @@ export const en = {
   nav_rewards: 'Rewards',
   nav_profile: 'My Account',
   nav_add: 'Add Habit',
+  nav_add_short: 'Add',
 
   // Splash / Onboarding (sections 19-20)
   onboarding_1_title: 'Build better habits',

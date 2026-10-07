@@ -28,3 +28,102 @@
 [2m9:18:01 AM[22m [36m[1m[vite][22m[39m [32mpage reload [39m[2mandroid/app/build/intermediates/assets/release/public/index.html[22m
 [2m9:18:04 AM[22m [36m[1m[vite][22m[39m [32mhmr update [39m[2m/src/features/stats/Statistics.tsx[22m
 [2m9:18:20 AM[22m [36m[1m[vite][22m[39m [32mhmr update [39m[2m/src/ui/charts.tsx[22m
+[2m9:21:41 AM[22m [36m[1m[vite][22m[39m [32mhmr update [39m[2m/src/features/stats/Statistics.tsx[22m
+[2m9:22:24 AM[22m [36m[1m[vite][22m[39m [32mhmr update [39m[2m/src/App.tsx[22m
+[2m9:22:37 AM[22m [36m[1m[vite][22m[39m [32mhmr update [39m[2m/src/App.tsx[22m
+[2m9:22:37 AM[22m [31m[1m[vite][22m[39m [31mInternal server error: C:\Users\h\Downloads\Zi\habitgo\app\src\App.tsx: Expected corresponding JSX closing tag for <ErrorBoundary>. (141:10)
+
+[0m [90m 139 |[31m               [33m<[31m[33m/[31m[33mRoutes[31m[33m>[31m
+ [90m 140 |[31m             [33m<[31m[33m/[31m[33mdiv[31m[33m>[31m
+[31m[1m>[22m[31m[90m 141 |[31m           [33m<[31m[33m/[31m[33mAppStoreProvider[31m[33m>[31m
+ [90m     |[31m           [31m[1m^[22m[31m
+ [90m 142 |[31m         [33m<[31m[33m/[31m[33mToastProvider[31m[33m>[31m
+ [90m 143 |[31m       [33m<[31m[33m/[31m[33mThemeProvider[31m[33m>[31m
+ [90m 144 |[31m     [33m<[31m[33m/[31m[33mI18nProvider[31m[33m>[31m[0m[39m
+  Plugin: [35mvite:react-babel[39m
+  File: [36mC:/Users/h/Downloads/Zi/habitgo/app/src/App.tsx[39m:141:10
+[33m  139|                </Routes>
+  140|              </div>
+  141|            </AppStoreProvider>
+     |            ^
+  142|          </ToastProvider>
+  143|        </ThemeProvider>[39m
+      at constructor (C:\Users\h\Downloads\Zi\habitgo\app\node_modules\@babel\parser\lib\index.js:369:19)
+      at TypeScriptParserMixin.raise (C:\Users\h\Downloads\Zi\habitgo\app\node_modules\@babel\parser\lib\index.js:6622:19)
+      at TypeScriptParserMixin.jsxParseElementAt (C:\Users\h\Downloads\Zi\habitgo\app\node_modules\@babel\parser\lib\index.js:4745:16)
+      at TypeScriptParserMixin.jsxParseElementAt (C:\Users\h\Downloads\Zi\habitgo\app\node_modules\@babel\parser\lib\index.js:4716:32)
+      at TypeScriptParserMixin.jsxParseElementAt (C:\Users\h\Downloads\Zi\habitgo\app\node_modules\@babel\parser\lib\index.js:4716:32)
+      at TypeScriptParserMixin.jsxParseElementAt (C:\Users\h\Downloads\Zi\habitgo\app\node_modules\@babel\parser\lib\index.js:4716:32)
+      at TypeScriptParserMixin.jsxParseElementAt (C:\Users\h\Downloads\Zi\habitgo\app\node_modules\@babel\parser\lib\index.js:4716:32)
+      at TypeScriptParserMixin.jsxParseElement (C:\Users\h\Downloads\Zi\habitgo\app\node_modules\@babel\parser\lib\index.js:4767:17)
+      at TypeScriptParserMixin.parseExprAtom (C:\Users\h\Downloads\Zi\habitgo\app\node_modules\@babel\parser\lib\index.js:4777:19)
+      at TypeScriptParserMixin.parseExprSubscripts (C:\Users\h\Downloads\Zi\habitgo\app\node_modules\@babel\parser\lib\index.js:11107:23)
+      at TypeScriptParserMixin.parseUpdate (C:\Users\h\Downloads\Zi\habitgo\app\node_modules\@babel\parser\lib\index.js:11092:21)
+      at TypeScriptParserMixin.parseMaybeUnary (C:\Users\h\Downloads\Zi\habitgo\app\node_modules\@babel\parser\lib\index.js:11072:23)
+      at TypeScriptParserMixin.parseMaybeUnary (C:\Users\h\Downloads\Zi\habitgo\app\node_modules\@babel\parser\lib\index.js:9860:18)
+      at TypeScriptParserMixin.parseMaybeUnaryOrPrivate (C:\Users\h\Downloads\Zi\habitgo\app\node_modules\@babel\parser\lib\index.js:10925:61)
+      at TypeScriptParserMixin.parseExprOps (C:\Users\h\Downloads\Zi\habitgo\app\node_modules\@babel\parser\lib\index.js:10930:23)
+      at TypeScriptParserMixin.parseMaybeConditional (C:\Users\h\Downloads\Zi\habitgo\app\node_modules\@babel\parser\lib\index.js:10907:23)
+      at TypeScriptParserMixin.parseMaybeAssign (C:\Users\h\Downloads\Zi\habitgo\app\node_modules\@babel\parser\lib\index.js:10857:21)
+      at C:\Users\h\Downloads\Zi\habitgo\app\node_modules\@babel\parser\lib\index.js:9798:39
+      at TypeScriptParserMixin.tryParse (C:\Users\h\Downloads\Zi\habitgo\app\node_modules\@babel\parser\lib\index.js:6930:20)
+      at TypeScriptParserMixin.parseMaybeAssign (C:\Users\h\Downloads\Zi\habitgo\app\node_modules\@babel\parser\lib\index.js:9798:18)
+      at C:\Users\h\Downloads\Zi\habitgo\app\node_modules\@babel\parser\lib\index.js:10826:39
+      at TypeScriptParserMixin.allowInAnd (C:\Users\h\Downloads\Zi\habitgo\app\node_modules\@babel\parser\lib\index.js:12460:12)
+      at TypeScriptParserMixin.parseMaybeAssignAllowIn (C:\Users\h\Downloads\Zi\habitgo\app\node_modules\@babel\parser\lib\index.js:10826:17)
+      at TypeScriptParserMixin.parseMaybeAssignAllowInOrVoidPattern (C:\Users\h\Downloads\Zi\habitgo\app\node_modules\@babel\parser\lib\index.js:12527:17)
+      at TypeScriptParserMixin.parseParenAndDistinguishExpression (C:\Users\h\Downloads\Zi\habitgo\app\node_modules\@babel\parser\lib\index.js:11706:28)
+      at TypeScriptParserMixin.parseExprAtom (C:\Users\h\Downloads\Zi\habitgo\app\node_modules\@babel\parser\lib\index.js:11362:23)
+      at TypeScriptParserMixin.parseExprAtom (C:\Users\h\Downloads\Zi\habitgo\app\node_modules\@babel\parser\lib\index.js:4782:20)
+      at TypeScriptParserMixin.parseExprSubscripts (C:\Users\h\Downloads\Zi\habitgo\app\node_modules\@babel\parser\lib\index.js:11107:23)
+      at TypeScriptParserMixin.parseUpdate (C:\Users\h\Downloads\Zi\habitgo\app\node_modules\@babel\parser\lib\index.js:11092:21)
+      at TypeScriptParserMixin.parseMaybeUnary (C:\Users\h\Downloads\Zi\habitgo\app\node_modules\@babel\parser\lib\index.js:11072:23)
+      at TypeScriptParserMixin.parseMaybeUnary (C:\Users\h\Downloads\Zi\habitgo\app\node_modules\@babel\parser\lib\index.js:9860:18)
+      at TypeScriptParserMixin.parseMaybeUnaryOrPrivate (C:\Users\h\Downloads\Zi\habitgo\app\node_modules\@babel\parser\lib\index.js:10925:61)
+      at TypeScriptParserMixin.parseExprOps (C:\Users\h\Downloads\Zi\habitgo\app\node_modules\@babel\parser\lib\index.js:10930:23)
+      at TypeScriptParserMixin.parseMaybeConditional (C:\Users\h\Downloads\Zi\habitgo\app\node_modules\@babel\parser\lib\index.js:10907:23)
+      at TypeScriptParserMixin.parseMaybeAssign (C:\Users\h\Downloads\Zi\habitgo\app\node_modules\@babel\parser\lib\index.js:10857:21)
+      at TypeScriptParserMixin.parseMaybeAssign (C:\Users\h\Downloads\Zi\habitgo\app\node_modules\@babel\parser\lib\index.js:9809:20)
+      at TypeScriptParserMixin.parseExpressionBase (C:\Users\h\Downloads\Zi\habitgo\app\node_modules\@babel\parser\lib\index.js:10810:23)
+      at C:\Users\h\Downloads\Zi\habitgo\app\node_modules\@babel\parser\lib\index.js:10806:39
+      at TypeScriptParserMixin.allowInAnd (C:\Users\h\Downloads\Zi\habitgo\app\node_modules\@babel\parser\lib\index.js:12455:16)
+      at TypeScriptParserMixin.parseExpression (C:\Users\h\Downloads\Zi\habitgo\app\node_modules\@babel\parser\lib\index.js:10806:17)
+      at TypeScriptParserMixin.parseReturnStatement (C:\Users\h\Downloads\Zi\habitgo\app\node_modules\@babel\parser\lib\index.js:13176:28)
+      at TypeScriptParserMixin.parseStatementContent (C:\Users\h\Downloads\Zi\habitgo\app\node_modules\@babel\parser\lib\index.js:12832:21)
+      at TypeScriptParserMixin.parseStatementContent (C:\Users\h\Downloads\Zi\habitgo\app\node_modules\@babel\parser\lib\index.js:9531:18)
+      at TypeScriptParserMixin.parseStatementLike (C:\Users\h\Downloads\Zi\habitgo\app\node_modules\@babel\parser\lib\index.js:12801:17)
+      at TypeScriptParserMixin.parseStatementListItem (C:\Users\h\Downloads\Zi\habitgo\app\node_modules\@babel\parser\lib\index.js:12781:17)
+      at TypeScriptParserMixin.parseBlockOrModuleBlockBody (C:\Users\h\Downloads\Zi\habitgo\app\node_modules\@babel\parser\lib\index.js:13350:61)
+      at TypeScriptParserMixin.parseBlockBody (C:\Users\h\Downloads\Zi\habitgo\app\node_modules\@babel\parser\lib\index.js:13343:10)
+      at TypeScriptParserMixin.parseBlock (C:\Users\h\Downloads\Zi\habitgo\app\node_modules\@babel\parser\lib\index.js:13331:10)
+      at TypeScriptParserMixin.parseFunctionBody (C:\Users\h\Downloads\Zi\habitgo\app\node_modules\@babel\parser\lib\index.js:12134:24)
+      at TypeScriptParserMixin.parseFunctionBodyAndFinish (C:\Users\h\Downloads\Zi\habitgo\app\node_modules\@babel\parser\lib\index.js:12120:10)
+[2m9:22:53 AM[22m [36m[1m[vite][22m[39m [32mhmr update [39m[2m/src/App.tsx[22m
+[2m9:24:15 AM[22m [36m[1m[vite][22m[39m [32mpage reload [39m[2mandroid/app/src/main/assets/public/index.html[22m
+[2m9:24:35 AM[22m [36m[1m[vite][22m[39m [32mpage reload [39m[2mandroid/app/build/intermediates/assets/debug/public/index.html[22m
+[2m9:24:40 AM[22m [36m[1m[vite][22m[39m [32mpage reload [39m[2mandroid/app/build/intermediates/assets/release/public/index.html[22m
+[2m9:29:49 AM[22m [36m[1m[vite][22m[39m [32mhmr update [39m[2m/src/theme/components.css[22m
+[2m9:30:05 AM[22m [36m[1m[vite][22m[39m [32mhmr update [39m[2m/src/layouts/AppLayout.tsx[22m
+[2m9:30:20 AM[22m [36m[1m[vite][22m[39m [32mhmr update [39m[2m/src/i18n/index.tsx[22m
+[2m9:30:20 AM[22m [36m[1m[vite][22m[39m [33mhmr invalidate [39m[2m/src/i18n/index.tsx[22m Could not Fast Refresh ("useI18n" export is incompatible). Learn more at https://github.com/vitejs/vite-plugin-react/tree/main/packages/plugin-react#consistent-components-exports
+[2m9:30:20 AM[22m [36m[1m[vite][22m[39m [32mhmr update [39m[2m/src/App.tsx, /src/features/onboarding/Splash.tsx, /src/features/auth/Login.tsx, /src/features/onboarding/Personalization.tsx, /src/layouts/AppLayout.tsx, /src/features/onboarding/Onboarding.tsx, /src/ui/components.tsx, /src/features/rewards/RedeemSuccess.tsx, /src/features/rewards/RedemptionHistory.tsx, /src/features/rewards/RewardDetails.tsx, /src/features/profile/PrivacyPage.tsx, /src/features/profile/HelpPage.tsx, /src/features/auth/ForgotPassword.tsx, /src/features/engagement/ChallengeDetails.tsx, /src/features/auth/Register.tsx, /src/features/home/Home.tsx, /src/features/profile/EditProfile.tsx, /src/features/wallet/Transactions.tsx, /src/features/profile/NotificationsCenter.tsx, /src/features/wallet/Wallet.tsx, /src/features/stats/Statistics.tsx, /src/features/habits/AllHabits.tsx, /src/features/engagement/Challenges.tsx, /src/features/rewards/Rewards.tsx, /src/features/profile/Settings.tsx, /src/features/profile/NotificationSettings.tsx, /src/features/engagement/Achievements.tsx, /src/features/profile/AdminPage.tsx, /src/features/profile/Appearance.tsx, /src/features/profile/LanguageSettings.tsx, /src/features/habits/HabitDetails.tsx, /src/features/habits/CalendarPage.tsx, /src/features/habits/HabitForm.tsx, /src/features/profile/Profile.tsx, /src/features/habits/HabitCard.tsx[22m
+[2m9:30:21 AM[22m [36m[1m[vite][22m[39m [33mhmr invalidate [39m[2m/src/ui/components.tsx[22m Could not Fast Refresh ("useToast" export is incompatible). Learn more at https://github.com/vitejs/vite-plugin-react/tree/main/packages/plugin-react#consistent-components-exports
+[2m9:30:21 AM[22m [36m[1m[vite][22m[39m [32mhmr update [39m[2m/src/App.tsx, /src/features/auth/Login.tsx, /src/features/onboarding/Personalization.tsx, /src/features/onboarding/Onboarding.tsx, /src/features/rewards/RedeemSuccess.tsx, /src/features/rewards/RedemptionHistory.tsx, /src/features/rewards/RewardDetails.tsx, /src/features/profile/PrivacyPage.tsx, /src/features/profile/HelpPage.tsx, /src/features/auth/ForgotPassword.tsx, /src/features/engagement/ChallengeDetails.tsx, /src/features/auth/Register.tsx, /src/features/home/Home.tsx, /src/features/profile/EditProfile.tsx, /src/features/wallet/Transactions.tsx, /src/features/profile/NotificationsCenter.tsx, /src/features/wallet/Wallet.tsx, /src/features/stats/Statistics.tsx, /src/features/habits/AllHabits.tsx, /src/features/engagement/Challenges.tsx, /src/features/rewards/Rewards.tsx, /src/features/profile/Settings.tsx, /src/features/profile/NotificationSettings.tsx, /src/features/engagement/Achievements.tsx, /src/features/profile/AdminPage.tsx, /src/features/profile/Appearance.tsx, /src/features/profile/LanguageSettings.tsx, /src/features/habits/HabitDetails.tsx, /src/features/habits/CalendarPage.tsx, /src/features/habits/HabitForm.tsx, /src/features/profile/Profile.tsx, /src/features/habits/HabitCard.tsx, /src/ui/ErrorBoundary.tsx[22m
+[2m9:30:21 AM[22m [36m[1m[vite][22m[39m [33mhmr invalidate [39m[2m/src/features/wallet/Wallet.tsx[22m Could not Fast Refresh ("txTypeLabel" export is incompatible). Learn more at https://github.com/vitejs/vite-plugin-react/tree/main/packages/plugin-react#consistent-components-exports
+[2m9:30:21 AM[22m [36m[1m[vite][22m[39m [32mhmr update [39m[2m/src/App.tsx, /src/features/wallet/Transactions.tsx[22m
+[2m9:30:21 AM[22m [36m[1m[vite][22m[39m [33mhmr invalidate [39m[2m/src/features/habits/HabitForm.tsx[22m Could not Fast Refresh ("localToday" export is incompatible). Learn more at https://github.com/vitejs/vite-plugin-react/tree/main/packages/plugin-react#consistent-components-exports
+[2m9:30:21 AM[22m [36m[1m[vite][22m[39m [32mhmr update [39m[2m/src/App.tsx[22m
+[2m9:30:21 AM[22m [36m[1m[vite][22m[39m [33mhmr invalidate [39m[2m/src/features/habits/HabitCard.tsx[22m Could not Fast Refresh ("localToday" export is incompatible). Learn more at https://github.com/vitejs/vite-plugin-react/tree/main/packages/plugin-react#consistent-components-exports
+[2m9:30:21 AM[22m [36m[1m[vite][22m[39m [32mhmr update [39m[2m/src/features/home/Home.tsx, /src/features/habits/AllHabits.tsx[22m
+[2m9:30:38 AM[22m [36m[1m[vite][22m[39m [32mhmr update [39m[2m/src/i18n/index.tsx[22m
+[2m9:30:38 AM[22m [36m[1m[vite][22m[39m [33mhmr invalidate [39m[2m/src/i18n/index.tsx[22m Could not Fast Refresh ("useI18n" export is incompatible). Learn more at https://github.com/vitejs/vite-plugin-react/tree/main/packages/plugin-react#consistent-components-exports
+[2m9:30:38 AM[22m [36m[1m[vite][22m[39m [32mhmr update [39m[2m/src/App.tsx, /src/features/onboarding/Splash.tsx, /src/features/auth/Login.tsx, /src/features/onboarding/Personalization.tsx, /src/layouts/AppLayout.tsx, /src/features/onboarding/Onboarding.tsx, /src/ui/components.tsx, /src/features/rewards/RedeemSuccess.tsx, /src/features/rewards/RedemptionHistory.tsx, /src/features/rewards/RewardDetails.tsx, /src/features/profile/PrivacyPage.tsx, /src/features/profile/HelpPage.tsx, /src/features/auth/ForgotPassword.tsx, /src/features/engagement/ChallengeDetails.tsx, /src/features/auth/Register.tsx, /src/features/home/Home.tsx, /src/features/profile/EditProfile.tsx, /src/features/wallet/Transactions.tsx, /src/features/profile/NotificationsCenter.tsx, /src/features/wallet/Wallet.tsx, /src/features/stats/Statistics.tsx, /src/features/habits/AllHabits.tsx, /src/features/engagement/Challenges.tsx, /src/features/rewards/Rewards.tsx, /src/features/profile/Settings.tsx, /src/features/profile/NotificationSettings.tsx, /src/features/engagement/Achievements.tsx, /src/features/profile/AdminPage.tsx, /src/features/profile/Appearance.tsx, /src/features/profile/LanguageSettings.tsx, /src/features/habits/HabitDetails.tsx, /src/features/habits/CalendarPage.tsx, /src/features/habits/HabitForm.tsx, /src/features/profile/Profile.tsx, /src/features/habits/HabitCard.tsx[22m
+[2m9:30:39 AM[22m [36m[1m[vite][22m[39m [33mhmr invalidate [39m[2m/src/ui/components.tsx[22m Could not Fast Refresh ("useToast" export is incompatible). Learn more at https://github.com/vitejs/vite-plugin-react/tree/main/packages/plugin-react#consistent-components-exports
+[2m9:30:39 AM[22m [36m[1m[vite][22m[39m [32mhmr update [39m[2m/src/App.tsx, /src/features/auth/Login.tsx, /src/features/onboarding/Personalization.tsx, /src/features/onboarding/Onboarding.tsx, /src/features/rewards/RedeemSuccess.tsx, /src/features/rewards/RedemptionHistory.tsx, /src/features/rewards/RewardDetails.tsx, /src/features/profile/PrivacyPage.tsx, /src/features/profile/HelpPage.tsx, /src/features/auth/ForgotPassword.tsx, /src/features/engagement/ChallengeDetails.tsx, /src/features/auth/Register.tsx, /src/features/home/Home.tsx, /src/features/profile/EditProfile.tsx, /src/features/wallet/Transactions.tsx, /src/features/profile/NotificationsCenter.tsx, /src/features/wallet/Wallet.tsx, /src/features/stats/Statistics.tsx, /src/features/habits/AllHabits.tsx, /src/features/engagement/Challenges.tsx, /src/features/rewards/Rewards.tsx, /src/features/profile/Settings.tsx, /src/features/profile/NotificationSettings.tsx, /src/features/engagement/Achievements.tsx, /src/features/profile/AdminPage.tsx, /src/features/profile/Appearance.tsx, /src/features/profile/LanguageSettings.tsx, /src/features/habits/HabitDetails.tsx, /src/features/habits/CalendarPage.tsx, /src/features/habits/HabitForm.tsx, /src/features/profile/Profile.tsx, /src/features/habits/HabitCard.tsx, /src/ui/ErrorBoundary.tsx[22m
+[2m9:30:39 AM[22m [36m[1m[vite][22m[39m [33mhmr invalidate [39m[2m/src/features/wallet/Wallet.tsx[22m Could not Fast Refresh ("txTypeLabel" export is incompatible). Learn more at https://github.com/vitejs/vite-plugin-react/tree/main/packages/plugin-react#consistent-components-exports
+[2m9:30:39 AM[22m [36m[1m[vite][22m[39m [32mhmr update [39m[2m/src/App.tsx, /src/features/wallet/Transactions.tsx[22m
+[2m9:30:39 AM[22m [36m[1m[vite][22m[39m [33mhmr invalidate [39m[2m/src/features/habits/HabitForm.tsx[22m Could not Fast Refresh ("localToday" export is incompatible). Learn more at https://github.com/vitejs/vite-plugin-react/tree/main/packages/plugin-react#consistent-components-exports
+[2m9:30:39 AM[22m [36m[1m[vite][22m[39m [32mhmr update [39m[2m/src/App.tsx[22m
+[2m9:30:39 AM[22m [36m[1m[vite][22m[39m [33mhmr invalidate [39m[2m/src/features/habits/HabitCard.tsx[22m Could not Fast Refresh ("localToday" export is incompatible). Learn more at https://github.com/vitejs/vite-plugin-react/tree/main/packages/plugin-react#consistent-components-exports
+[2m9:30:39 AM[22m [36m[1m[vite][22m[39m [32mhmr update [39m[2m/src/features/home/Home.tsx, /src/features/habits/AllHabits.tsx[22m
+[2m9:32:26 AM[22m [36m[1m[vite][22m[39m [32mpage reload [39m[2mandroid/app/src/main/assets/public/index.html[22m

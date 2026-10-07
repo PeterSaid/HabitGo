@@ -8,7 +8,7 @@ import { useReminders } from '../utils/reminders';
 const TABS = [
   { path: '/', icon: Home, key: 'nav_home' },
   { path: '/habits', icon: ListChecks, key: 'nav_habits' },
-  { path: '/add', icon: Plus, key: 'nav_add' },
+  { path: '/add', icon: Plus, key: 'nav_add_short' },
   { path: '/rewards', icon: Gift, key: 'nav_rewards' },
   { path: '/profile', icon: User, key: 'nav_profile' },
 ] as const;
@@ -26,9 +26,6 @@ export default function AppLayout() {
     if (path === '/') return location.pathname === '/';
     return location.pathname.startsWith(path);
   };
-
-  // Screens with their own fixed primary CTA — hide the FAB so they never overlap
-  const hideFab = /^\/rewards\/[^/]+$/.test(location.pathname);
 
   return (
     <>
@@ -50,10 +47,12 @@ export default function AppLayout() {
         {TABS.map((tab) => {
           const Icon = tab.icon;
           if (tab.path === '/add') {
-            if (hideFab) return <span key="add-slot" aria-hidden />;
             return (
-              <button key="add" className="fab" aria-label={t('nav_add')} onClick={() => navigate('/habits/new')}>
-                <Plus size={26} strokeWidth={2.6} />
+              <button key="add" className="nav-add" aria-label={t('nav_add')} onClick={() => navigate('/habits/new')}>
+                <span className="nav-add-circle">
+                  <Plus size={22} strokeWidth={2.6} />
+                </span>
+                <span>{t('nav_add_short')}</span>
               </button>
             );
           }
